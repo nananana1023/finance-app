@@ -23,8 +23,50 @@ const Register = () => {
   const [emailError, setEmailError] = useState(""); // Email validation error
   const [showPasswordValidation, setShowPasswordValidation] = useState(false); // Show password rules only when user types
   const [showEmailValidation, setShowEmailValidation] = useState(false); // Show email error only when user types
+  const [usernameError, setUsernameError] = useState("");
+  const [verificationCode, setVerificationCode] = useState("");
 
   const navigate = useNavigate(); // React Router's navigation function
+
+  const validateUsername = async (username) => {
+    setUsername(username);
+
+    // Minimum length validation (frontend)
+    if (username.length < 3) {
+      setUsernameError("Username must be at least 3 characters.");
+      return;
+    } else {
+      setUsernameError(""); // Clear local error
+    }
+
+    // Send request to Django to validate username
+    try {
+      const response = await axios.post(
+        "http://127.0.0.1:8000/auth/validate-username/",
+        { username }
+      );
+
+      if (response.data.valid === false) {
+        setUsernameError(response.data.message); // Show Django error
+      } else {
+        setUsernameError(""); // Clear error if username is available
+      }
+    } catch (error) {
+      // Log the entire error response for debugging
+      console.error("❌ Error during username validation:", error);
+
+      // Check if the error response has a message
+      if (
+        error.response &&
+        error.response.data &&
+        error.response.data.message
+      ) {
+        setUsernameError(error.response.data.message); // Show Django error
+      } else {
+        setUsernameError("An error occurred while validating the username.");
+      }
+    }
+  };
 
   /**
    * Function to check password strength dynamically as the user types.
@@ -50,17 +92,45 @@ const Register = () => {
    * Function to validate email format in real-time.
    * Updates the email state and displays an error message if invalid.
    */
-  const validateEmail = (email) => {
-    if (!showEmailValidation) {
-      setShowEmailValidation(true); // Show email validation only after user types
+
+  const validateEmail = async (email) => {
+    setEmail(email);
+
+    // Standard email format validation (frontend)
+    const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailPattern.test(email)) {
+      setEmailError("Enter a valid email address.");
+      return;
+    } else {
+      setEmailError(""); // Clear format error
     }
 
-    setEmail(email);
-    const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/; // Standard email format regex
-    if (email && !emailPattern.test(email)) {
-      setEmailError("Invalid email format."); // Show error if format is wrong
-    } else {
-      setEmailError(""); // Clear error if format is correct
+    // Send request to Django to validate the email
+    try {
+      const response = await axios.post(
+        "http://127.0.0.1:8000/auth/validate-email/",
+        { email }
+      );
+
+      if (response.data.valid === false) {
+        setEmailError(response.data.message); // Set Django's exact message
+      } else {
+        setEmailError(""); // Clear error if email is valid
+      }
+    } catch (error) {
+      console.error("❌ Email validation error:", error.response?.data);
+
+      // Extract Django's error message correctly
+      if (
+        error.response &&
+        error.response.data &&
+        error.response.data.message
+      ) {
+        setEmailError(error.response.data.message); // Show Django's exact message
+      } else {
+        setEmailError("An error occurred while validating the email.");
+        console.error("❌ Full email error response:", error.response);
+      }
     }
   };
 
@@ -82,18 +152,44 @@ const Register = () => {
       return;
     }
 
-    try {
-      await axios.post("http://127.0.0.1:8000/auth/register/", {
-        //sends a POST request to
-        username,
-        email,
-        password,
-      });
+    const userData = {
+      username,
+      email,
+      password,
+    };
 
-      navigate("/login"); // Redirect to login page after successful registration
+    try {
+      const response = await axios.post(
+        "http://127.0.0.1:8000/auth/register/",
+        userData,
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Accept: "application/json",
+          },
+        }
+      );
+
+      navigate("/login");
     } catch (error) {
-      console.log("Registration failed", error.response?.data);
-      setError("Registration failed. Please check your details.");
+      console.error(
+        "Registration failed:",
+        error.response?.data || error.message
+      );
+
+      if (error.response && error.response.data) {
+        // Show Django's validation errors
+        if (error.response.data.email) {
+          setEmailError(error.response.data.email[0]); // Show email error
+        } else {
+          setError(
+            error.response.data.error ||
+              "Registration failed. Please check your details."
+          );
+        }
+      } else {
+        setError("An error occurred. Please try again.");
+      }
     }
   };
 
@@ -110,21 +206,24 @@ const Register = () => {
           type="text"
           placeholder="Username"
           value={username}
-          onChange={(e) => setUsername(e.target.value)}
+          onChange={(e) => validateUsername(e.target.value)}
           required
         />
+        {/* Show username validation error in real-time */}
+        {usernameError && (
+          <p style={{ color: "red", fontSize: "0.9rem" }}>{usernameError}</p>
+        )}
 
         {/* Email input field */}
         <input
           type="email"
           placeholder="Email"
           value={email}
-          onChange={(e) => validateEmail(e.target.value)} // Validate email while typing
+          onChange={(e) => validateEmail(e.target.value)}
           required
         />
-
-        {/* Show email validation error if present (only after typing begins) */}
-        {showEmailValidation && emailError && (
+        {/* Show Django's validation errors in real-time */}
+        {emailError && (
           <p style={{ color: "red", fontSize: "0.9rem" }}>{emailError}</p>
         )}
 
@@ -182,10 +281,31 @@ const Register = () => {
         {/* Disable Submit Button When Validation Fails */}
         <button
           type="submit"
-          disabled={!Object.values(passwordChecks).every(Boolean) || emailError}
+          disabled={
+            !!usernameError ||
+            !!emailError ||
+            !Object.values(passwordChecks).every(Boolean)
+          }
         >
-          Register
+          Sign Up
         </button>
+
+        <p style={{ marginTop: "10px", fontSize: "0.9rem" }}>
+          Already have an account?{" "}
+          <button
+            onClick={() => navigate("/login")}
+            style={{
+              background: "none",
+              border: "none",
+              color: "blue",
+              cursor: "pointer",
+              textDecoration: "underline",
+              fontSize: "0.9rem",
+            }}
+          >
+            Log in
+          </button>
+        </p>
       </form>
     </div>
   );

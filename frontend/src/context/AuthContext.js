@@ -22,7 +22,12 @@ export const AuthProvider = ({ children }) => {
 
       navigate("/dashboard"); // Redirect to dashboard
     } catch (error) {
-      console.log("Login failed", error.response?.data);
+      console.log("❌ Login failed:", error.response?.data);
+
+      // Throw error to be caught in Login.js
+      throw new Error(
+        error.response?.data?.error || "Invalid username or password."
+      );
     }
   };
 
