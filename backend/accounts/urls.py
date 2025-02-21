@@ -1,12 +1,10 @@
 from django.urls import path
-from .views import RegisterView, LoginView, validate_email_view, validate_username_view, login_validate_username_view
-
+from .views import LoginView, validate_email_view, validate_username_view, request_verification_code, verify_code
 
 urlpatterns = [
-    path('register/', RegisterView.as_view(), name="register"),
     path('login/', LoginView.as_view(), name="login"),
     path('validate-email/', validate_email_view, name="validate-email"),
     path('validate-username/', validate_username_view, name="validate-username"),
-    path('login-validate-username/', login_validate_username_view, name="validate-username"),
-
+    path("request-verification-code/", request_verification_code, name="request-verification-code"),
+    path("verify-code/", verify_code, name="verify-code"),
 ]

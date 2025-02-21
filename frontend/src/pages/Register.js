@@ -4,13 +4,12 @@ import { useNavigate } from "react-router-dom"; // React Router navigation
 import { Eye, EyeOff } from "lucide-react"; // Import eye icons
 
 const Register = () => {
-  // Input fields state
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false); // Controls password visibility
 
-  // State for tracking password validation rules
+  // State for tracking password rules
   const [passwordChecks, setPasswordChecks] = useState({
     length: false,
     uppercase: false,
@@ -20,58 +19,62 @@ const Register = () => {
   });
 
   const [error, setError] = useState(""); // General registration error
-  const [emailError, setEmailError] = useState(""); // Email validation error
+  const [emailError, setEmailError] = useState("");
   const [showPasswordValidation, setShowPasswordValidation] = useState(false); // Show password rules only when user types
-  const [showEmailValidation, setShowEmailValidation] = useState(false); // Show email error only when user types
   const [usernameError, setUsernameError] = useState("");
+  const [step, setStep] = useState(1); // Step 1: Register, Step 2: Verify Code
   const [verificationCode, setVerificationCode] = useState("");
-
   const navigate = useNavigate(); // React Router's navigation function
 
   const validateUsername = async (username) => {
     setUsername(username);
 
-    // Minimum length validation (frontend)
     if (username.length < 3) {
       setUsernameError("Username must be at least 3 characters.");
       return;
     } else {
-      setUsernameError(""); // Clear local error
+      setUsernameError("");
     }
 
-    // Send request to Django to validate username
     try {
+      console.log("Sending request:", { username });
+
       const response = await axios.post(
         "http://127.0.0.1:8000/auth/validate-username/",
-        { username }
+        { username },
+        {
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
       );
 
-      if (response.data.valid === false) {
-        setUsernameError(response.data.message); // Show Django error
+      console.log("API Response:", response.data);
+
+      if (!response.data.valid) {
+        setUsernameError(response.data.message); // Show backend error in UI
       } else {
-        setUsernameError(""); // Clear error if username is available
+        setUsernameError(""); // Clear error if username is valid
       }
     } catch (error) {
-      // Log the entire error response for debugging
-      console.error("❌ Error during username validation:", error);
+      console.error(
+        "API Error:",
+        error.response ? error.response.data : error.message
+      );
 
-      // Check if the error response has a message
+      // If server returns a response (e.g., 400 Bad Request), extract message
       if (
         error.response &&
         error.response.data &&
         error.response.data.message
       ) {
-        setUsernameError(error.response.data.message); // Show Django error
+        setUsernameError(error.response.data.message); // Show backend error
       } else {
-        setUsernameError("An error occurred while validating the username.");
+        setUsernameError("An error occurred while validating the username."); // Fallback error
       }
     }
   };
 
-  /**
-   * Function to check password strength dynamically as the user types.
-   * Updates the password and passwordChecks state.
-   */
   const checkPasswordStrength = (password) => {
     if (!showPasswordValidation) {
       setShowPasswordValidation(true); // Show password rules only after the user types
@@ -80,23 +83,18 @@ const Register = () => {
     setPassword(password); // Update password state
 
     setPasswordChecks({
-      length: password.length >= 8, // ✅ At least 8 characters
-      uppercase: /[A-Z]/.test(password), // ✅ At least one uppercase letter
-      lowercase: /[a-z]/.test(password), // ✅ At least one lowercase letter
-      number: /\d/.test(password), // ✅ At least one number
-      specialChar: /[!@#$%^&*(),.?":{}|<>]/.test(password), // ✅ At least one special character
+      length: password.length >= 8,
+      uppercase: /[A-Z]/.test(password),
+      lowercase: /[a-z]/.test(password),
+      number: /\d/.test(password),
+      specialChar: /[!@#$%^&*(),.?":{}|<>]/.test(password),
     });
   };
-
-  /**
-   * Function to validate email format in real-time.
-   * Updates the email state and displays an error message if invalid.
-   */
 
   const validateEmail = async (email) => {
     setEmail(email);
 
-    // Standard email format validation (frontend)
+    // Standard email format validation
     const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailPattern.test(email)) {
       setEmailError("Enter a valid email address.");
@@ -118,7 +116,7 @@ const Register = () => {
         setEmailError(""); // Clear error if email is valid
       }
     } catch (error) {
-      console.error("❌ Email validation error:", error.response?.data);
+      console.error("Email validation error:", error.response?.data);
 
       // Extract Django's error message correctly
       if (
@@ -129,184 +127,183 @@ const Register = () => {
         setEmailError(error.response.data.message); // Show Django's exact message
       } else {
         setEmailError("An error occurred while validating the email.");
-        console.error("❌ Full email error response:", error.response);
+        console.error("Full email error response:", error.response);
       }
     }
   };
 
   /**
-   * Function to handle user registration.
-   * Ensures all validations pass before sending the request.
+   * Step 1: Request Verification Code
    */
-  const handleSubmit = async (e) => {
+  const handleRegister = async (e) => {
+    e.preventDefault();
+    try {
+      await axios.post(
+        "http://127.0.0.1:8000/auth/request-verification-code/",
+        {
+          email,
+        }
+      );
+      setStep(2); // Move to verification step
+    } catch (error) {
+      setError(
+        error.response?.data?.message || "Failed to send verification code."
+      );
+    }
+  };
+
+  const handleVerifyCode = async (e) => {
     e.preventDefault();
 
-    // Ensure all password conditions are met before submission
-    if (!Object.values(passwordChecks).every(Boolean)) {
-      setError("Password does not meet all security requirements.");
-      return;
-    }
-
-    if (emailError) {
-      setError("Please enter a valid email.");
-      return;
-    }
-
-    const userData = {
-      username,
-      email,
-      password,
-    };
-
     try {
-      const response = await axios.post(
-        "http://127.0.0.1:8000/auth/register/",
-        userData,
-        {
-          headers: {
-            "Content-Type": "application/json",
-            Accept: "application/json",
-          },
-        }
-      );
-
-      navigate("/login");
+      await axios.post("http://127.0.0.1:8000/auth/verify-code/", {
+        email,
+        code: verificationCode,
+        username,
+        password,
+      });
+      navigate("/login", {
+        state: {
+          successMessage: "Account successfully verified! You can now log in.",
+        },
+      });
     } catch (error) {
-      console.error(
-        "Registration failed:",
-        error.response?.data || error.message
-      );
-
-      if (error.response && error.response.data) {
-        // Show Django's validation errors
-        if (error.response.data.email) {
-          setEmailError(error.response.data.email[0]); // Show email error
-        } else {
-          setError(
-            error.response.data.error ||
-              "Registration failed. Please check your details."
-          );
-        }
-      } else {
-        setError("An error occurred. Please try again.");
-      }
+      setError(error.response?.data?.message || "Invalid verification code.");
     }
   };
 
   return (
     <div>
-      <h2>Register</h2>
+      <h2>{step === 1 ? "Register" : "Verify Email"}</h2>
 
-      {/* Show general error message if any */}
-      {error && <p style={{ color: "red" }}>{error}</p>}
+      {step === 1 ? (
+        // {/* general error message */}
+        // {error && <p style={{ color: "red" }}>{error}</p>}
 
-      <form onSubmit={handleSubmit}>
-        {/* Username input field */}
-        <input
-          type="text"
-          placeholder="Username"
-          value={username}
-          onChange={(e) => validateUsername(e.target.value)}
-          required
-        />
-        {/* Show username validation error in real-time */}
-        {usernameError && (
-          <p style={{ color: "red", fontSize: "0.9rem" }}>{usernameError}</p>
-        )}
-
-        {/* Email input field */}
-        <input
-          type="email"
-          placeholder="Email"
-          value={email}
-          onChange={(e) => validateEmail(e.target.value)}
-          required
-        />
-        {/* Show Django's validation errors in real-time */}
-        {emailError && (
-          <p style={{ color: "red", fontSize: "0.9rem" }}>{emailError}</p>
-        )}
-
-        {/* Password input field with Show/Hide Toggle */}
-        <div style={{ position: "relative" }}>
+        <form onSubmit={handleRegister}>
+          {/* Username input field */}
           <input
-            type={showPassword ? "text" : "password"} // Toggle input type
-            placeholder="Password"
-            value={password}
-            onChange={(e) => checkPasswordStrength(e.target.value)} // Validate password as user types
+            type="text"
+            placeholder="Username"
+            value={username}
+            onChange={(e) => validateUsername(e.target.value)}
             required
-            style={{ width: "100%", paddingRight: "40px" }} // Ensure enough space for the button
           />
-          <button
-            type="button"
-            onClick={() => setShowPassword(!showPassword)}
-            style={{
-              position: "absolute",
-              right: "10px",
-              top: "50%",
-              transform: "translateY(-50%)",
-              border: "none",
-              background: "none",
-              cursor: "pointer",
-              fontSize: "16px",
-            }}
-          >
-            {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
-          </button>
-        </div>
+          {/* Show username validation error in real-time */}
+          {usernameError && (
+            <p style={{ color: "red", fontSize: "0.9rem" }}>{usernameError}</p>
+          )}
 
-        {/* ✅ Real-time Password Validation Messages (Only Show After User Starts Typing) */}
-        {showPasswordValidation && (
-          <ul style={{ listStyleType: "none", padding: 0 }}>
-            <li style={{ color: passwordChecks.length ? "green" : "red" }}>
-              {passwordChecks.length ? "✅" : "❌"} At least 8 characters
-            </li>
-            <li style={{ color: passwordChecks.uppercase ? "green" : "red" }}>
-              {passwordChecks.uppercase ? "✅" : "❌"} At least one uppercase
-              letter
-            </li>
-            <li style={{ color: passwordChecks.lowercase ? "green" : "red" }}>
-              {passwordChecks.lowercase ? "✅" : "❌"} At least one lowercase
-              letter
-            </li>
-            <li style={{ color: passwordChecks.number ? "green" : "red" }}>
-              {passwordChecks.number ? "✅" : "❌"} At least one number
-            </li>
-            <li style={{ color: passwordChecks.specialChar ? "green" : "red" }}>
-              {passwordChecks.specialChar ? "✅" : "❌"} At least one special
-              character
-            </li>
-          </ul>
-        )}
-        {/* Disable Submit Button When Validation Fails */}
-        <button
-          type="submit"
-          disabled={
-            !!usernameError ||
-            !!emailError ||
-            !Object.values(passwordChecks).every(Boolean)
-          }
-        >
-          Sign Up
-        </button>
+          {/* Email input field */}
+          <input
+            type="email"
+            placeholder="Email"
+            value={email}
+            onChange={(e) => validateEmail(e.target.value)}
+            required
+          />
+          {/* Show Django's validation errors in real-time */}
+          {emailError && (
+            <p style={{ color: "red", fontSize: "0.9rem" }}>{emailError}</p>
+          )}
 
-        <p style={{ marginTop: "10px", fontSize: "0.9rem" }}>
-          Already have an account?{" "}
+          {/* Password input field with Show/Hide Toggle */}
+          <div style={{ position: "relative" }}>
+            <input
+              type={showPassword ? "text" : "password"} // Toggle input type
+              placeholder="Password"
+              value={password}
+              onChange={(e) => checkPasswordStrength(e.target.value)} // Validate password as user types
+              required
+              style={{ width: "100%", paddingRight: "40px" }} // Ensure enough space for the button
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              style={{
+                position: "absolute",
+                right: "10px",
+                top: "50%",
+                transform: "translateY(-50%)",
+                border: "none",
+                background: "none",
+                cursor: "pointer",
+                fontSize: "16px",
+              }}
+            >
+              {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+            </button>
+          </div>
+
+          {/* Real-time Password Validation Messages (Only Show After User Starts Typing) */}
+          {showPasswordValidation && (
+            <ul style={{ listStyleType: "none", padding: 0 }}>
+              <li style={{ color: passwordChecks.length ? "green" : "red" }}>
+                {passwordChecks.length ? "✅" : "❌"} At least 8 characters
+              </li>
+              <li style={{ color: passwordChecks.uppercase ? "green" : "red" }}>
+                {passwordChecks.uppercase ? "✅" : "❌"} At least one uppercase
+                letter
+              </li>
+              <li style={{ color: passwordChecks.lowercase ? "green" : "red" }}>
+                {passwordChecks.lowercase ? "✅" : "❌"} At least one lowercase
+                letter
+              </li>
+              <li style={{ color: passwordChecks.number ? "green" : "red" }}>
+                {passwordChecks.number ? "✅" : "❌"} At least one number
+              </li>
+              <li
+                style={{ color: passwordChecks.specialChar ? "green" : "red" }}
+              >
+                {passwordChecks.specialChar ? "✅" : "❌"} At least one special
+                character
+              </li>
+            </ul>
+          )}
+          {/* Disable Submit Button When Validation Fails */}
           <button
-            onClick={() => navigate("/login")}
-            style={{
-              background: "none",
-              border: "none",
-              color: "blue",
-              cursor: "pointer",
-              textDecoration: "underline",
-              fontSize: "0.9rem",
-            }}
+            type="submit"
+            disabled={
+              !!usernameError ||
+              !!emailError ||
+              !Object.values(passwordChecks).every(Boolean)
+            }
           >
-            Log in
+            Sign Up
           </button>
-        </p>
-      </form>
+
+          <p style={{ marginTop: "10px", fontSize: "0.9rem" }}>
+            Already have an account?{" "}
+            <button
+              onClick={() => navigate("/login")}
+              style={{
+                background: "none",
+                border: "none",
+                color: "blue",
+                cursor: "pointer",
+                textDecoration: "underline",
+                fontSize: "0.9rem",
+              }}
+            >
+              Log in
+            </button>
+          </p>
+        </form>
+      ) : (
+        <form onSubmit={handleVerifyCode}>
+          <p>A verification code was sent to {email}. Enter the code below:</p>
+          <input
+            type="text"
+            placeholder="Enter verification code"
+            value={verificationCode}
+            onChange={(e) => setVerificationCode(e.target.value)}
+            required
+          />
+          <button type="submit">Verify Code</button>
+        </form>
+      )}
+
+      {error && <p style={{ color: "red" }}>{error}</p>}
     </div>
   );
 };

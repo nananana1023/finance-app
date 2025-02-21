@@ -10,7 +10,7 @@ export const AuthProvider = ({ children }) => {
   // Function to login a user
   const loginUser = async (username, password, navigate) => {
     try {
-      const response = await axios.post("http://127.0.0.1:8000/auth/login/", {
+      const response = await axios.post("http://127.0.0.1:8000/login/", {
         username,
         password,
       });
@@ -22,7 +22,7 @@ export const AuthProvider = ({ children }) => {
 
       navigate("/dashboard"); // Redirect to dashboard
     } catch (error) {
-      console.log("❌ Login failed:", error.response?.data);
+      console.log("Login failed:", error.response?.data);
 
       // Throw error to be caught in Login.js
       throw new Error(
