@@ -4,6 +4,10 @@ import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Dashboard from "./pages/Dashboard";
 import Home from "./pages/Home";
+import UserHome from "./pages/UserHome";
+import Transactions from "./pages/Transactions";
+import Insights from "./pages/Insights";
+import Profile from "./pages/Profile";
 
 function App() {
   return (
@@ -16,6 +20,10 @@ function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/userhome" element={<UserHome />} />
+          <Route path="/transactions" element={<Transactions />} />
+          <Route path="/insights" element={<Insights />} />
+          <Route path="/profile" element={<Profile />} />
         </Routes>
       </AuthProvider>
     </Router>

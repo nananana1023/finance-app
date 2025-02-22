@@ -43,6 +43,7 @@ INSTALLED_APPS = [
     'rest_framework_simplejwt',
     'djoser',
     'accounts',
+    'profiles',
 ]
 
 MIDDLEWARE = [
@@ -145,7 +146,10 @@ REST_FRAMEWORK = {
     ),
      'DEFAULT_PARSER_CLASSES': (
         'rest_framework.parsers.JSONParser',
-     )
+     ),
+    'DEFAULT_PERMISSION_CLASSES': (
+        'rest_framework.permissions.IsAuthenticated',
+    ),
 }
 
 
@@ -157,7 +161,6 @@ EMAIL_USE_TLS = True
 EMAIL_HOST_USER = "savvy.wallet.app@gmail.com"  
 EMAIL_HOST_PASSWORD = "jwef unvx osvg qesq"  
 
-# PASSWORD_RESET_TIMEOUT=14400 #4 hours 
 
 AUTH_USER_MODEL = "accounts.CustomUser"
 

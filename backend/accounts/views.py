@@ -9,6 +9,10 @@ import random
 from django.core.mail import send_mail
 import time
 from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.decorators import api_view, permission_classes
+from django.http import JsonResponse
+
 
 User = get_user_model()  # Use the custom user model dynamically
 
@@ -120,3 +124,13 @@ class LoginView(generics.GenericAPIView):
 
         print("Password mismatch")  
         return Response({"error": "Invalid Credentials"}, status=400)
+    
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])  # ✅ Require authentication but no redirect
+def get_user_details(request):
+    user = request.user
+    return JsonResponse({
+        "id": user.id,
+        "username": user.username,
+        "email": user.email
+    })

@@ -1,57 +1,59 @@
 import { createContext, useState, useEffect } from "react";
-import axios from "axios";
+import axios from "axios"; // ✅ Import axios
 
 const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
-  const [token, setToken] = useState(localStorage.getItem("token") || null);
+  const [loading, setLoading] = useState(true);
 
-  // Function to login a user
-  const loginUser = async (username, password, navigate) => {
-    try {
-      const response = await axios.post("http://127.0.0.1:8000/login/", {
-        username,
-        password,
-      });
-
-      // Store tokens in localStorage
-      localStorage.setItem("token", response.data.access);
-      setToken(response.data.access);
-      setUser({ username });
-
-      navigate("/dashboard"); // Redirect to dashboard
-    } catch (error) {
-      console.log("Login failed:", error.response?.data);
-
-      // Throw error to be caught in Login.js
-      throw new Error(
-        error.response?.data?.error || "Invalid username or password."
-      );
-    }
-  };
-
-  // Function to logout
-  const logoutUser = () => {
-    setToken(null);
-    setUser(null);
-    localStorage.removeItem("token"); // Remove token from storage
-  };
-
-  // Fetch user details if token exists
   useEffect(() => {
-    if (token) {
-      axios
-        .get("http://127.0.0.1:8000/auth/users/me/", {
-          headers: { Authorization: `Bearer ${token}` },
-        })
-        .then((response) => setUser(response.data))
-        .catch(() => logoutUser());
-    }
-  }, [token]);
+    const fetchUser = async () => {
+      const token = localStorage.getItem("accessToken");
+
+      console.log("🔍 Token from localStorage:", token);
+
+      if (!token) {
+        console.log("⚠ No token found. User is not authenticated.");
+        setLoading(false);
+        return;
+      }
+
+      try {
+        const headers = {
+          Authorization: `Bearer ${token}`,
+        };
+
+        console.log("📡 Fetching user with headers:", headers);
+
+        const response = await axios.get("http://127.0.0.1:8000/auth/user/", {
+          headers,
+        });
+
+        console.log("✅ User data received:", response.data);
+        setUser(response.data);
+      } catch (error) {
+        console.error(
+          "❌ Error fetching user:",
+          error.response?.data || error.message
+        );
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchUser();
+  }, []);
+
+  const logoutUser = () => {
+    console.log("🚪 Logging out user...");
+    localStorage.removeItem("accessToken");
+    localStorage.removeItem("refreshToken");
+    setUser(null);
+  };
 
   return (
-    <AuthContext.Provider value={{ user, loginUser, logoutUser, token }}>
+    <AuthContext.Provider value={{ user, logoutUser, loading }}>
       {children}
     </AuthContext.Provider>
   );
