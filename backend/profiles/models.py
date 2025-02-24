@@ -1,12 +1,17 @@
 from django.conf import settings
 from django.db import models
+from django.core.exceptions import ValidationError
 
+def validate_positive(value):
+    if value <= 0:
+        raise ValidationError("Amount must be greater than zero.")
+    
 class UserFinancialProfile(models.Model):
     user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, primary_key=True)
     currency = models.CharField(max_length=10)
     country = models.CharField(max_length=100)
-    monthly_income = models.DecimalField(max_digits=10, decimal_places=2)
-    monthly_spending_goal = models.DecimalField(max_digits=10, decimal_places=2)
+    monthly_income = models.FloatField(validators=[validate_positive])
+    monthly_spending_goal = models.FloatField(validators=[validate_positive])
 
     SAVINGS_PERCENT_CHOICES = [
         ("10%", "10%"),
@@ -42,3 +47,31 @@ class UserFinancialProfile(models.Model):
         
     def __str__(self):
         return f"{self.user.username} - Financial Profile"
+
+def validate_positive(value):
+    """Ensure the amount is greater than 0."""
+    if value <= 0:
+        raise ValidationError("Amount must be greater than zero.")
+    
+class Transaction(models.Model):
+    INCOME_SUBCATEGORIES = ["salary", "allowance", "investment_gain", "stipend", "sale_proceeds", "dividend", "other"]
+    EXPENSE_SUBCATEGORIES = ["grocery", "restaurant", "entertainment", "healthcare", "utility", "subscription", "gift",
+                             "self_care", "housing", "clothes", "miscellaneous"]
+    SAVINGS_INVESTMENT_SUBCATEGORIES = ["stock", "bond", "crypto", "fund", "real_estate", "savings"]
+
+    CATEGORY_CHOICES = [
+        ("income", "Income"),
+        ("expense", "Expense"),
+        ("savings_investment", "Savings & Investment"),
+    ]
+    
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    category = models.CharField(max_length=20, choices=CATEGORY_CHOICES, blank=True)  # Auto-filled by serializer
+    subcategory = models.CharField(max_length=30)
+    amount = models.FloatField(validators=[validate_positive])
+    date = models.DateField()
+    note = models.TextField(blank=True, null=True) #optional
+    merchant = models.CharField(max_length=255, blank=True, default="")   #optional
+
+    def __str__(self):
+        return f"{self.user.username} - {self.subcategory} ({self.category}) - {self.amount}"

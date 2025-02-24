@@ -149,6 +149,7 @@ REST_FRAMEWORK = {
      ),
     'DEFAULT_PERMISSION_CLASSES': (
         'rest_framework.permissions.IsAuthenticated',
+        'rest_framework.permissions.AllowAny', 
     ),
 }
 
@@ -163,5 +164,4 @@ EMAIL_HOST_PASSWORD = "jwef unvx osvg qesq"
 
 
 AUTH_USER_MODEL = "accounts.CustomUser"
-
 

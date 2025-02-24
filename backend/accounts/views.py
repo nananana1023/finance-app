@@ -12,12 +12,15 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.decorators import api_view, permission_classes
 from django.http import JsonResponse
+from rest_framework.permissions import AllowAny
+from rest_framework.decorators import permission_classes
 
 
 User = get_user_model()  # Use the custom user model dynamically
 
 
 @api_view(["POST"])
+@permission_classes([AllowAny])
 def validate_email_view(request):
     email = request.data.get("email", "")
 
@@ -34,6 +37,7 @@ def validate_email_view(request):
     return Response({"valid": True})  # No error if email is valid
 
 @api_view(["POST"])
+@permission_classes([AllowAny]) 
 def validate_username_view(request):
     username = request.data.get("username", "")
 
@@ -50,6 +54,7 @@ def generate_verification_code():
     return str(random.randint(100000, 999999))
 
 @api_view(["POST"])
+@permission_classes([AllowAny])
 def request_verification_code(request):
     email = request.data.get("email")
 
@@ -71,6 +76,7 @@ def request_verification_code(request):
     return Response({"message": "A verification code has been sent to your email."})
 
 @api_view(["POST"])
+@permission_classes([AllowAny])
 def verify_code(request):
     email = request.data.get("email")
     code = request.data.get("code")
@@ -126,7 +132,7 @@ class LoginView(generics.GenericAPIView):
         return Response({"error": "Invalid Credentials"}, status=400)
     
 @api_view(["GET"])
-@permission_classes([IsAuthenticated])  # ✅ Require authentication but no redirect
+@permission_classes([IsAuthenticated])  
 def get_user_details(request):
     user = request.user
     return JsonResponse({

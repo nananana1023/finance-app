@@ -52,9 +52,9 @@ const Register = () => {
       console.log("API Response:", response.data);
 
       if (!response.data.valid) {
-        setUsernameError(response.data.message); // Show backend error in UI
+        setUsernameError(response.data.message);
       } else {
-        setUsernameError(""); // Clear error if username is valid
+        setUsernameError("");
       }
     } catch (error) {
       console.error(
@@ -62,15 +62,14 @@ const Register = () => {
         error.response ? error.response.data : error.message
       );
 
-      // If server returns a response (e.g., 400 Bad Request), extract message
       if (
         error.response &&
         error.response.data &&
         error.response.data.message
       ) {
-        setUsernameError(error.response.data.message); // Show backend error
+        setUsernameError(error.response.data.message);
       } else {
-        setUsernameError("An error occurred while validating the username."); // Fallback error
+        setUsernameError("An error occurred while validating the username.");
       }
     }
   };

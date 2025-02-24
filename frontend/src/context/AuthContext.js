@@ -1,5 +1,6 @@
 import { createContext, useState, useEffect } from "react";
-import axios from "axios"; // ✅ Import axios
+import axios from "axios";
+import { refreshAccessToken } from "../utils/auth"; // ✅ Import token refresh function
 
 const AuthContext = createContext();
 
@@ -9,9 +10,9 @@ export const AuthProvider = ({ children }) => {
 
   useEffect(() => {
     const fetchUser = async () => {
-      const token = localStorage.getItem("accessToken");
+      let token = localStorage.getItem("accessToken");
 
-      console.log("🔍 Token from localStorage:", token);
+      console.log("🔍 Checking token before request:", token);
 
       if (!token) {
         console.log("⚠ No token found. User is not authenticated.");
@@ -20,14 +21,9 @@ export const AuthProvider = ({ children }) => {
       }
 
       try {
-        const headers = {
-          Authorization: `Bearer ${token}`,
-        };
-
-        console.log("📡 Fetching user with headers:", headers);
-
+        console.log("📡 Fetching user data...");
         const response = await axios.get("http://127.0.0.1:8000/auth/user/", {
-          headers,
+          headers: { Authorization: `Bearer ${token}` },
         });
 
         console.log("✅ User data received:", response.data);
@@ -37,6 +33,35 @@ export const AuthProvider = ({ children }) => {
           "❌ Error fetching user:",
           error.response?.data || error.message
         );
+
+        if (error.response?.status === 401) {
+          console.log("🔄 Token expired. Refreshing...");
+          token = await refreshAccessToken();
+
+          if (token) {
+            try {
+              const retryResponse = await axios.get(
+                "http://127.0.0.1:8000/auth/user/",
+                {
+                  headers: { Authorization: `Bearer ${token}` },
+                }
+              );
+
+              console.log(
+                "✅ User data received after refresh:",
+                retryResponse.data
+              );
+              setUser(retryResponse.data);
+            } catch (retryError) {
+              console.error(
+                "❌ Failed after refreshing token:",
+                retryError.response?.data || retryError.message
+              );
+            }
+          } else {
+            console.log("⚠ User must log in again.");
+          }
+        }
       } finally {
         setLoading(false);
       }
@@ -53,7 +78,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, logoutUser, loading }}>
+    <AuthContext.Provider value={{ user, loading, logoutUser }}>
       {children}
     </AuthContext.Provider>
   );

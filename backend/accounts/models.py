@@ -5,4 +5,4 @@ class CustomUser(AbstractUser):  # CustomUser is extending AbstractUser
     is_verified = models.BooleanField(default=False)  # Users must verify before logging in.
 
     def __str__(self):
-        return self.username  # Display username when printing the user
+        return self.username 
