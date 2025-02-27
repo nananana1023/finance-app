@@ -95,7 +95,6 @@ const FinancialProfileForm = ({ onSuccess }) => {
       if (error.response?.status === 401) {
         console.log("Token expired. Refreshing...");
 
-        // Try refreshing the token
         token = await refreshAccessToken();
         if (token) {
           try {

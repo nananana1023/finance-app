@@ -81,11 +81,11 @@ const Transactions = () => {
     date: new Date().toISOString().split("T")[0], // Default to today
   });
   const [selectedTransaction, setSelectedTransaction] = useState(null);
+  const token = localStorage.getItem("accessToken");
+  const headers = { Authorization: `Bearer ${token}` };
 
   useEffect(() => {
     const fetchProfileAndTransactions = async () => {
-      const token = localStorage.getItem("accessToken");
-
       console.log("Token from localStorage:", token);
       console.log("User data from AuthContext:", user);
 
@@ -100,16 +100,11 @@ const Transactions = () => {
       }
 
       try {
-        const headers = { Authorization: `Bearer ${token}` };
-
-        console.log("Fetching user financial profile...");
         const profileResponse = await axios.get(
           "http://127.0.0.1:8000/api/financial-profile/",
           { headers }
         );
-        console.log("Profile API Response:", profileResponse.data);
-
-        console.log("Fetching transactions...");
+        console.log("Financial profile API Response:", profileResponse.data);
         const transactionsResponse = await axios.get(
           "http://127.0.0.1:8000/api/transactions/",
           { headers }
@@ -125,8 +120,6 @@ const Transactions = () => {
         const userProfile = profileResponse.data.find(
           (p) => p.user === user.user_id
         );
-        console.log("Filtered Profile for User:", userProfile);
-
         setProfile(userProfile || null);
       } catch (error) {
         console.error(
@@ -148,16 +141,9 @@ const Transactions = () => {
 
   const handleAddTransaction = async (e) => {
     e.preventDefault();
-    const token = localStorage.getItem("accessToken");
-
-    if (!token) {
-      setError("User is not authenticated.");
-      return;
-    }
 
     try {
-      const headers = { Authorization: `Bearer ${token}` };
-
+      //POST request to create trans
       const response = await axios.post(
         "http://127.0.0.1:8000/api/transactions/",
         {
@@ -171,7 +157,7 @@ const Transactions = () => {
         { headers }
       );
 
-      setTransactions([...transactions, response.data]); // Update transactions list
+      setTransactions([...transactions, response.data]);
       setShowForm(false);
       setNewTransaction({
         subcategory: "",
@@ -202,11 +188,8 @@ const Transactions = () => {
   const handleSaveEdit = async () => {
     if (!selectedTransaction) return;
 
-    const token = localStorage.getItem("accessToken");
-
     try {
-      const headers = { Authorization: `Bearer ${token}` };
-
+      //update request to API
       const response = await axios.put(
         `http://127.0.0.1:8000/api/transactions/${selectedTransaction.id}/`,
         selectedTransaction,
@@ -229,12 +212,8 @@ const Transactions = () => {
 
   const handleDeleteTransaction = async () => {
     if (!selectedTransaction) return;
-
-    const token = localStorage.getItem("accessToken");
-
     try {
-      const headers = { Authorization: `Bearer ${token}` };
-
+      //delete request to API
       await axios.delete(
         `http://127.0.0.1:8000/api/transactions/${selectedTransaction.id}/`,
         { headers }

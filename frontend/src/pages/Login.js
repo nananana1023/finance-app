@@ -1,6 +1,6 @@
 import { useState, useContext } from "react";
 import { useNavigate } from "react-router-dom";
-import axios from "axios"; // Import Axios for API calls
+import axios from "axios";
 import AuthContext from "../context/AuthContext";
 import { Eye, EyeOff } from "lucide-react";
 import { useLocation } from "react-router-dom";
@@ -11,8 +11,8 @@ const Login = () => {
 
   const { loginUser } = useContext(AuthContext);
   const navigate = useNavigate(); // useNavigate inside component
-  const [showPassword, setShowPassword] = useState(false); // State for password visibility
-  const [error, setError] = useState(""); // State for login errors
+  const [showPassword, setShowPassword] = useState(false);
+  const [error, setError] = useState("");
   const location = useLocation();
   const successMessage = location.state?.successMessage;
 
@@ -45,7 +45,6 @@ const Login = () => {
         <p style={{ color: "green", fontWeight: "bold" }}>{successMessage}</p>
       )}
       <form onSubmit={handleSubmit}>
-        {/* Username Input */}
         <input
           type="text"
           placeholder="Username"
@@ -54,7 +53,6 @@ const Login = () => {
           required
         />
 
-        {/* Password Input with Eye Toggle */}
         <div style={{ position: "relative" }}>
           <input
             type={showPassword ? "text" : "password"} // Toggle input type
@@ -82,15 +80,12 @@ const Login = () => {
           </button>
         </div>
 
-        {/* Show login error */}
         {error && <p style={{ color: "red", fontSize: "0.9rem" }}>{error}</p>}
 
-        {/* Log In Button - Disabled if fields are empty or username has error */}
         <button type="submit" disabled={!username || !password}>
           Log In
         </button>
 
-        {/* Create Account */}
         <p style={{ marginTop: "10px", fontSize: "0.9rem" }}>
           <button
             onClick={() => navigate("/register")}

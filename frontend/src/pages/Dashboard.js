@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
-import FinancialProfileForm from "./FinancialProfileForm"; // Import the form
+import FinancialProfileForm from "./FinancialProfileForm";
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -30,10 +30,10 @@ const Dashboard = () => {
         );
 
         if (response.data.length > 0) {
-          setProfile(response.data[0]); // ✅ Save the profile data
+          setProfile(response.data[0]);
           navigate("/userhome");
         } else {
-          setProfile(null); // No profile found
+          setProfile(null);
         }
       } catch (error) {
         console.error(
@@ -50,11 +50,16 @@ const Dashboard = () => {
   }, [navigate]);
 
   const handleProfileSubmit = () => {
-    setProfile(true); // ✅ Update state after successful profile submission
+    setProfile(true);
+    navigate("/userhome", {
+      state: {
+        message: "Your financial profile has been set up successfully! ",
+      },
+    });
   };
 
   if (loading) return <p>Loading...</p>;
-  if (error) return <p style={{ color: "red" }}>⚠ {error}</p>;
+  if (error) return <p style={{ color: "red" }}> {error}</p>;
 
   return (
     <div className="dashboard-container">

@@ -1,15 +1,14 @@
 import { useState } from "react";
-import axios from "axios"; // Axios - for making HTTP requests
-import { useNavigate } from "react-router-dom"; // React Router navigation
-import { Eye, EyeOff } from "lucide-react"; // Import eye icons
+import axios from "axios";
+import { useNavigate } from "react-router-dom";
+import { Eye, EyeOff } from "lucide-react";
 
 const Register = () => {
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [showPassword, setShowPassword] = useState(false); // Controls password visibility
+  const [showPassword, setShowPassword] = useState(false);
 
-  // State for tracking password rules
   const [passwordChecks, setPasswordChecks] = useState({
     length: false,
     uppercase: false,
@@ -18,13 +17,13 @@ const Register = () => {
     specialChar: false,
   });
 
-  const [error, setError] = useState(""); // General registration error
+  const [error, setError] = useState("");
   const [emailError, setEmailError] = useState("");
-  const [showPasswordValidation, setShowPasswordValidation] = useState(false); // Show password rules only when user types
+  const [showPasswordValidation, setShowPasswordValidation] = useState(false);
   const [usernameError, setUsernameError] = useState("");
-  const [step, setStep] = useState(1); // Step 1: Register, Step 2: Verify Code
+  const [step, setStep] = useState(1); // register then verify Code
   const [verificationCode, setVerificationCode] = useState("");
-  const navigate = useNavigate(); // React Router's navigation function
+  const navigate = useNavigate();
 
   const validateUsername = async (username) => {
     setUsername(username);
@@ -37,8 +36,6 @@ const Register = () => {
     }
 
     try {
-      console.log("Sending request:", { username });
-
       const response = await axios.post(
         "http://127.0.0.1:8000/auth/validate-username/",
         { username },
@@ -49,7 +46,7 @@ const Register = () => {
         }
       );
 
-      console.log("API Response:", response.data);
+      console.log("username API Response:", response.data);
 
       if (!response.data.valid) {
         setUsernameError(response.data.message);
@@ -76,10 +73,10 @@ const Register = () => {
 
   const checkPasswordStrength = (password) => {
     if (!showPasswordValidation) {
-      setShowPasswordValidation(true); // Show password rules only after the user types
+      setShowPasswordValidation(true);
     }
 
-    setPassword(password); // Update password state
+    setPassword(password);
 
     setPasswordChecks({
       length: password.length >= 8,
@@ -93,13 +90,12 @@ const Register = () => {
   const validateEmail = async (email) => {
     setEmail(email);
 
-    // Standard email format validation
     const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailPattern.test(email)) {
       setEmailError("Enter a valid email address.");
       return;
     } else {
-      setEmailError(""); // Clear format error
+      setEmailError("");
     }
 
     // Send request to Django to validate the email
@@ -112,18 +108,17 @@ const Register = () => {
       if (response.data.valid === false) {
         setEmailError(response.data.message); // Set Django's exact message
       } else {
-        setEmailError(""); // Clear error if email is valid
+        setEmailError("");
       }
     } catch (error) {
       console.error("Email validation error:", error.response?.data);
 
-      // Extract Django's error message correctly
       if (
         error.response &&
         error.response.data &&
         error.response.data.message
       ) {
-        setEmailError(error.response.data.message); // Show Django's exact message
+        setEmailError(error.response.data.message);
       } else {
         setEmailError("An error occurred while validating the email.");
         console.error("Full email error response:", error.response);
@@ -131,9 +126,6 @@ const Register = () => {
     }
   };
 
-  /**
-   * Step 1: Request Verification Code
-   */
   const handleRegister = async (e) => {
     e.preventDefault();
     try {
@@ -176,11 +168,7 @@ const Register = () => {
       <h2>{step === 1 ? "Register" : "Verify Email"}</h2>
 
       {step === 1 ? (
-        // {/* general error message */}
-        // {error && <p style={{ color: "red" }}>{error}</p>}
-
         <form onSubmit={handleRegister}>
-          {/* Username input field */}
           <input
             type="text"
             placeholder="Username"
@@ -188,12 +176,10 @@ const Register = () => {
             onChange={(e) => validateUsername(e.target.value)}
             required
           />
-          {/* Show username validation error in real-time */}
           {usernameError && (
             <p style={{ color: "red", fontSize: "0.9rem" }}>{usernameError}</p>
           )}
 
-          {/* Email input field */}
           <input
             type="email"
             placeholder="Email"
@@ -201,20 +187,18 @@ const Register = () => {
             onChange={(e) => validateEmail(e.target.value)}
             required
           />
-          {/* Show Django's validation errors in real-time */}
           {emailError && (
             <p style={{ color: "red", fontSize: "0.9rem" }}>{emailError}</p>
           )}
 
-          {/* Password input field with Show/Hide Toggle */}
           <div style={{ position: "relative" }}>
             <input
-              type={showPassword ? "text" : "password"} // Toggle input type
+              type={showPassword ? "text" : "password"}
               placeholder="Password"
               value={password}
               onChange={(e) => checkPasswordStrength(e.target.value)} // Validate password as user types
               required
-              style={{ width: "100%", paddingRight: "40px" }} // Ensure enough space for the button
+              style={{ width: "100%", paddingRight: "40px" }}
             />
             <button
               type="button"
@@ -233,8 +217,6 @@ const Register = () => {
               {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
             </button>
           </div>
-
-          {/* Real-time Password Validation Messages (Only Show After User Starts Typing) */}
           {showPasswordValidation && (
             <ul style={{ listStyleType: "none", padding: 0 }}>
               <li style={{ color: passwordChecks.length ? "green" : "red" }}>
@@ -259,7 +241,6 @@ const Register = () => {
               </li>
             </ul>
           )}
-          {/* Disable Submit Button When Validation Fails */}
           <button
             type="submit"
             disabled={

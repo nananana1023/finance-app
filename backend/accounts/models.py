@@ -2,7 +2,7 @@ from django.contrib.auth.models import AbstractUser
 from django.db import models
 
 class CustomUser(AbstractUser):  # CustomUser is extending AbstractUser
-    is_verified = models.BooleanField(default=False)  # Users must verify before logging in.
+    is_verified = models.BooleanField(default=False) 
 
     def __str__(self):
         return self.username 

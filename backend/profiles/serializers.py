@@ -2,22 +2,20 @@ from rest_framework import serializers
 from .models import UserFinancialProfile
 from .models import Transaction
 
-
 class UserFinancialProfileSerializer(serializers.ModelSerializer):
     id = serializers.IntegerField(read_only=True)  
 
     class Meta:
         model = UserFinancialProfile
-        exclude = ['user']  # Exclude 'user' from required fields
+        exclude = ['user']  
 
 class TransactionSerializer(serializers.ModelSerializer):
     class Meta:
         model = Transaction
         exclude = ['user']
-        read_only_fields = ['category']  # Auto-filled by serializer
+        read_only_fields = ['category']  
 
     def validate(self, data):
-        """Automatically determine the category based on the selected subcategory"""
         subcategory = data.get("subcategory")
 
         # Define subcategories mapping to categories
@@ -35,13 +33,12 @@ class TransactionSerializer(serializers.ModelSerializer):
             "real_estate": "savings_investment", "savings": "savings_investment",
         }
 
-        # Determine category
+
         category = SUBCATEGORY_TO_CATEGORY.get(subcategory)
 
         if not category:
             raise serializers.ValidationError(f"Invalid subcategory '{subcategory}'. Please choose a valid subcategory.")
 
-        # Assign the category dynamically
         data["category"] = category
 
         return data

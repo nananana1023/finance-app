@@ -16,7 +16,7 @@ from rest_framework.permissions import AllowAny
 from rest_framework.decorators import permission_classes
 
 
-User = get_user_model()  # Use the custom user model dynamically
+User = get_user_model()
 
 
 @api_view(["POST"])
@@ -24,7 +24,6 @@ User = get_user_model()  # Use the custom user model dynamically
 def validate_email_view(request):
     email = request.data.get("email", "")
 
-    # Check if the email format is valid
     try:
         validate_email(email)
     except ValidationError:
@@ -34,7 +33,7 @@ def validate_email_view(request):
     if User.objects.filter(email=email).exists():
         return Response({"valid": False, "message": "Email is already in use."}, status=400)
 
-    return Response({"valid": True})  # No error if email is valid
+    return Response({"valid": True}) 
 
 @api_view(["POST"])
 @permission_classes([AllowAny]) 
@@ -57,17 +56,27 @@ def generate_verification_code():
 @permission_classes([AllowAny])
 def request_verification_code(request):
     email = request.data.get("email")
+    username = request.data.get("username")
 
     verification_code = generate_verification_code()
     timestamp = int(time.time())  # Current time in seconds
 
     # Store the code temporarily (expires in 5 minutes)
     pending_verifications[email] = {"code": verification_code, "timestamp": timestamp}
+    
+    message = f"""
+    Dear customer!
+    
+    Your verification code is: {verification_code}
+    
+    Kind regards,  
+    MoneySavvy Family 💸
+    """
 
     # Send email with the code
     send_mail(
         "Your Verification Code",
-        f"Your verification code is: {verification_code}",
+        message,
         "savvy.wallet.app@gmail.com",
         [email],
         fail_silently=False,
@@ -105,8 +114,6 @@ def verify_code(request):
 
     return Response({"message": "Email verified. Account created."}, status=201)
 
-
-# Login API (returns JWT tokens)
 class LoginView(generics.GenericAPIView):
     permission_classes = [permissions.AllowAny]
 
@@ -118,8 +125,6 @@ class LoginView(generics.GenericAPIView):
         if not user:
             print("User not found") 
             return Response({"error": "Invalid Credentials"}, status=400)
-
-        print(f"User found: {user.username}, Stored password: {user.password}")  
 
         if user.check_password(password):
             refresh = RefreshToken.for_user(user)

@@ -20,7 +20,6 @@ class UserFinancialProfile(models.Model):
         ("50%+", "50%+"),
     ]
 
-
     AGE_RANGES = [
         ('18-24', '18-24'),
         ('25-34', '25-34'),
@@ -42,16 +41,11 @@ class UserFinancialProfile(models.Model):
         ('Female', 'Female'),
         ('Prefer not to say', 'Prefer not to say')
     ])
-    future_goals = models.JSONField()  # Storing multiple selections
+    future_goals = models.JSONField() 
     savings_percent = models.CharField(max_length=5, choices=SAVINGS_PERCENT_CHOICES)
         
     def __str__(self):
         return f"{self.user.username} - Financial Profile"
-
-def validate_positive(value):
-    """Ensure the amount is greater than 0."""
-    if value <= 0:
-        raise ValidationError("Amount must be greater than zero.")
     
 class Transaction(models.Model):
     INCOME_SUBCATEGORIES = ["salary", "allowance", "investment_gain", "stipend", "sale_proceeds", "dividend", "other"]
@@ -66,7 +60,7 @@ class Transaction(models.Model):
     ]
     
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
-    category = models.CharField(max_length=20, choices=CATEGORY_CHOICES, blank=True)  # Auto-filled by serializer
+    category = models.CharField(max_length=20, choices=CATEGORY_CHOICES, blank=True)  # Auto filled by serializer
     subcategory = models.CharField(max_length=30)
     amount = models.FloatField(validators=[validate_positive])
     date = models.DateField()

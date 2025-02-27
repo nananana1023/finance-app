@@ -4,39 +4,22 @@ import AuthContext from "../context/AuthContext";
 import { useEffect, useState, useContext } from "react";
 import axios from "axios";
 
-const CURRENCY_SYMBOLS = {
-  USD: "$",
-  EUR: "€",
-  GBP: "£",
-  BGN: "лв",
-  CZK: "Kč",
-  DKK: "kr",
-  HUF: "Ft",
-  ISK: "kr",
-  NOK: "kr",
-  PLN: "zł",
-  RON: "lei",
-  SEK: "kr",
-  CHF: "CHF",
-  JPY: "¥",
-  CAD: "C$",
-  AUD: "A$",
-  NZD: "NZ$",
-  SGD: "S$",
-  HKD: "HK$",
-};
-
 const Profile = () => {
   const { user, logoutUser } = useContext(AuthContext);
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [successMessage, setSuccessMessage] = useState("");
+
   const [profile, setProfile] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
   const [updatedProfile, setUpdatedProfile] = useState({
     monthly_income: "",
     monthly_spending_goal: "",
   });
+
+  const token = localStorage.getItem("accessToken");
+  const headers = { Authorization: `Bearer ${token}` };
 
   const handleLogout = () => {
     logoutUser();
@@ -45,11 +28,6 @@ const Profile = () => {
 
   useEffect(() => {
     const fetchProfileData = async () => {
-      const token = localStorage.getItem("accessToken");
-
-      console.log("Token from localStorage:", token);
-      console.log("User data from AuthContext:", user);
-
       if (!token) {
         setError("User is not authenticated.");
         setLoading(false);
@@ -61,21 +39,12 @@ const Profile = () => {
       }
 
       try {
-        const headers = { Authorization: `Bearer ${token}` };
-
-        console.log("Fetching user financial profile...");
         const profileResponse = await axios.get(
           "http://127.0.0.1:8000/api/financial-profile/",
           { headers }
         );
-        console.log("Profile API Response:", profileResponse.data);
-
         setProfile(profileResponse.data[0] || null);
       } catch (error) {
-        console.error(
-          "Error fetching user data:",
-          error.response?.data || error.message
-        );
         setError("Failed to load user data.");
       } finally {
         setLoading(false);
@@ -85,10 +54,6 @@ const Profile = () => {
     fetchProfileData();
   }, [user]);
 
-  const handleEditClick = () => {
-    setIsEditing(true);
-  };
-
   const handleInputChange = (e) => {
     setUpdatedProfile({
       ...updatedProfile,
@@ -97,12 +62,7 @@ const Profile = () => {
   };
 
   const handleSave = async () => {
-    const token = localStorage.getItem("accessToken");
-
     try {
-      const headers = { Authorization: `Bearer ${token}` };
-
-      // Send the update request
       const response = await axios.patch(
         `http://127.0.0.1:8000/api/financial-profile/${user.id}/`,
         updatedProfile,
@@ -111,6 +71,12 @@ const Profile = () => {
 
       setProfile(response.data);
       setIsEditing(false);
+
+      setSuccessMessage("Your financial profile is updated successfully!");
+
+      setTimeout(() => {
+        setSuccessMessage(""); // Hide message after 5 seconds
+      }, 5000);
     } catch (error) {
       console.error(
         "Error updating profile:",
@@ -119,10 +85,26 @@ const Profile = () => {
     }
   };
 
+  if (loading) return <p>Loading...</p>;
+  if (error) return <p style={{ color: "red" }}> {error}</p>;
+
   return (
     <div>
       <Header />
       <h2>👋 Hello, {user ? user.username : ""}!</h2>
+
+      {successMessage && ( // ✅ Display success message if it's not empty
+        <p
+          style={{
+            color: "green",
+            background: "#d4edda",
+            padding: "10px",
+            borderRadius: "5px",
+          }}
+        >
+          {successMessage}
+        </p>
+      )}
 
       {profile ? (
         <div>
@@ -146,6 +128,21 @@ const Profile = () => {
                   onChange={handleInputChange}
                 />
               </label>
+              <label>
+                Savings percentage:
+                <select
+                  name="savings_percent"
+                  onChange={handleInputChange}
+                  required
+                >
+                  <option value="">Select Percentage</option>
+                  {["10%", "20%", "30%", "50%+"].map((choice) => (
+                    <option key={choice} value={choice}>
+                      {choice}
+                    </option>
+                  ))}
+                </select>
+              </label>
 
               <button onClick={handleSave}>Save</button>
               <button onClick={() => setIsEditing(false)}>Cancel</button>
@@ -153,20 +150,16 @@ const Profile = () => {
           ) : (
             <div>
               <p>
-                <strong>Monthly Income:</strong>{" "}
-                {CURRENCY_SYMBOLS[profile.currency] || profile.currency}{" "}
-                {profile.monthly_income}
+                <strong>Monthly Income:</strong> {profile.monthly_income}
               </p>
               <p>
                 <strong>Monthly Spending Goal:</strong>{" "}
-                {CURRENCY_SYMBOLS[profile.currency] || profile.currency}{" "}
                 {profile.monthly_spending_goal}
               </p>
-              {/* <p>
-                <strong>Savings/Investment percent:</strong>{" "}
-                {profile.savings_percent}
-              </p> */}
-              <button onClick={handleEditClick}>Edit</button>
+              <p>
+                <strong>Savings percentage:</strong> {profile.savings_percent}
+              </p>
+              <button onClick={() => setIsEditing(true)}>Edit</button>
             </div>
           )}
         </div>

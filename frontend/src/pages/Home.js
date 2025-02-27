@@ -1,7 +1,7 @@
 import { useNavigate } from "react-router-dom";
 
 const Home = () => {
-  const navigate = useNavigate(); // Hook to navigate between pages
+  const navigate = useNavigate();
 
   return (
     <div style={styles.container}>
@@ -21,7 +21,6 @@ const Home = () => {
   );
 };
 
-// CSS-in-JS styling
 const styles = {
   container: {
     textAlign: "center",
