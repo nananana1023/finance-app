@@ -4,7 +4,7 @@ from .models import UserFinancialProfile, Transaction
 from .serializers import UserFinancialProfileSerializer, TransactionSerializer
 from django.utils.timezone import datetime
 from django.db.models import Sum
-from rest_framework.decorators import api_view, permission_classes
+from rest_framework.decorators import api_view, permission_classes, action
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
@@ -38,6 +38,12 @@ class TransactionViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
+        
+    @action(detail=False, methods=['get'], url_path='by-month/(?P<year>\d{4})/(?P<month>\d{2})')
+    def by_month(self, request, year, month):
+        queryset = self.get_queryset().filter(date__year=year, date__month=month)
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
 
 #Filters transactions by selected month and user.
 @api_view(['GET'])

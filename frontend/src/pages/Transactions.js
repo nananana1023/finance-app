@@ -1,7 +1,20 @@
 import { useEffect, useState, useContext } from "react";
+import React, { Fragment } from "react";
 import axios from "axios";
 import AuthContext from "../context/AuthContext";
 import Header from "../components/Header";
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  Tooltip,
+  ResponsiveContainer,
+  CartesianGrid,
+  LabelList,
+  Legend,
+  Cell,
+} from "recharts";
 
 const CURRENCY_SYMBOLS = {
   USD: "$",
@@ -25,45 +38,10 @@ const CURRENCY_SYMBOLS = {
   HKD: "HK$",
 };
 
-const getSubcategoryStyle = (subcategory) => {
-  const expenseSubcategories = [
-    "grocery",
-    "restaurant",
-    "entertainment",
-    "healthcare",
-    "utility",
-    "subscription",
-    "gift",
-    "self_care",
-    "housing",
-    "clothes",
-    "miscellaneous",
-  ];
-  const incomeSubcategories = [
-    "salary",
-    "allowance",
-    "investment_gain",
-    "stipend",
-    "sale_proceeds",
-    "dividend",
-    "other",
-  ];
-  const savingsInvestmentSubcategories = [
-    "stock",
-    "bond",
-    "crypto",
-    "fund",
-    "real_estate",
-    "savings",
-  ];
-
-  if (expenseSubcategories.includes(subcategory))
-    return { backgroundColor: "#FFCCCC" };
-  if (incomeSubcategories.includes(subcategory))
-    return { backgroundColor: "#CCFFCC" };
-  if (savingsInvestmentSubcategories.includes(subcategory))
-    return { backgroundColor: "#CCE5FF" };
-  return {};
+const getCategoryColor = (cat) => {
+  if (cat == "expense") return "#78281f";
+  else if (cat == "income") return "#196f3d";
+  else return "#2e4053";
 };
 
 const Transactions = () => {
@@ -73,6 +51,14 @@ const Transactions = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [showForm, setShowForm] = useState(false);
+  const [summary, setSummary] = useState({
+    total_expense: 0,
+    total_income: 0,
+    total_investment: 0,
+  });
+  const [selectedMonth, setSelectedMonth] = useState(
+    new Date().toISOString().slice(0, 7)
+  );
   const [newTransaction, setNewTransaction] = useState({
     subcategory: "",
     amount: "",
@@ -86,8 +72,11 @@ const Transactions = () => {
 
   useEffect(() => {
     const fetchProfileAndTransactions = async () => {
+      const [year, month] = selectedMonth.split("-");
+
       console.log("Token from localStorage:", token);
       console.log("User data from AuthContext:", user);
+      console.log("Selected month:", month);
 
       if (!token) {
         setError("User is not authenticated.");
@@ -105,10 +94,12 @@ const Transactions = () => {
           { headers }
         );
         console.log("Financial profile API Response:", profileResponse.data);
+
         const transactionsResponse = await axios.get(
-          "http://127.0.0.1:8000/api/transactions/",
+          `http://127.0.0.1:8000/api/transactions/by-month/${year}/${month}/`,
           { headers }
         );
+
         console.log("Transactions API Response:", transactionsResponse.data);
 
         const userTransactions = transactionsResponse.data.filter(
@@ -132,8 +123,22 @@ const Transactions = () => {
       }
     };
 
+    const fetchSummary = async () => {
+      const [year, month] = selectedMonth.split("-");
+
+      try {
+        const response = await axios.get(
+          `http://127.0.0.1:8000/api/monthly-summary/${year}/${month}/`,
+          { headers }
+        );
+        setSummary(response.data);
+      } catch (error) {
+        console.error("Error fetching monthly summary:", error);
+      }
+    };
+    fetchSummary();
     fetchProfileAndTransactions();
-  }, [user]);
+  }, [user, selectedMonth]);
 
   const handleInputChange = (e) => {
     setNewTransaction({ ...newTransaction, [e.target.name]: e.target.value });
@@ -231,6 +236,27 @@ const Transactions = () => {
     }
   };
 
+  const groupedTransactions = transactions.reduce((groups, transaction) => {
+    const date = transaction.date;
+    if (!groups[date]) {
+      // key is date, value is array of transactions for that day
+      groups[date] = [];
+    }
+    groups[date].push(transaction);
+    return groups;
+  }, {});
+
+  const spendingData =
+    profile && profile.monthly_spending_goal
+      ? [
+          {
+            name: "Spending",
+            expense: summary.total_expense,
+            remaining: profile.monthly_spending_goal - summary.total_expense,
+          },
+        ]
+      : [];
+
   if (loading) return <p>Loading transactions...</p>;
   if (error) return <p style={{ color: "red" }}>{error}</p>;
 
@@ -239,51 +265,110 @@ const Transactions = () => {
       <Header />
       <h2>Your Transactions</h2>
 
-      {profile &&
-        profile.monthly_spending_goal !== null &&
-        !isNaN(profile.monthly_spending_goal) && (
-          <p>
+      <label>Select Month:</label>
+      <input
+        type="month"
+        value={selectedMonth}
+        onChange={(e) => setSelectedMonth(e.target.value)}
+      />
+      {/* bar with spending goal */}
+      {profile && profile.monthly_spending_goal && (
+        <div>
+          <h3>
             <strong>Monthly Spending Goal:</strong>{" "}
             {CURRENCY_SYMBOLS[profile.currency] || profile.currency}{" "}
             {profile.monthly_spending_goal}
-          </p>
-        )}
+          </h3>
+          <ResponsiveContainer width="80%" height={100}>
+            <BarChart
+              layout="vertical"
+              data={spendingData}
+              margin={{ top: 20, right: 30, left: 20, bottom: 20 }}
+            >
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis
+                type="number"
+                domain={[0, profile.monthly_spending_goal]}
+                hide
+              />
+              <YAxis type="category" dataKey="name" hide />
+              <Tooltip />
+              <Legend color="black" />
+              {/* occupied */}
+              <Bar dataKey="expense" stackId="a" fill="#3498db">
+                <LabelList dataKey="expense" position="inside" fill="black" />
+              </Bar>
+              {/*  remaining  */}
+              <Bar
+                dataKey="remaining"
+                stackId="a"
+                fill="#d6eaf8"
+                minPointSize={5}
+              >
+                <LabelList
+                  dataKey="remaining"
+                  position="insideLeft"
+                  fill="black"
+                />
+              </Bar>
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+      )}
 
+      {/* show */}
       {transactions.length === 0 ? (
         <p>No transactions found.</p>
       ) : (
         <table border="1">
           <thead>
             <tr>
-              <th>Date</th>
+              <th width="120">Date</th>
               <th>Category</th>
-
               <th>Note</th>
               <th>Amount</th>
             </tr>
           </thead>
           <tbody>
-            {transactions.map((transaction) => (
-              <tr
-                key={transaction.id}
-                onClick={() => handleRowClick(transaction)}
-                style={{ cursor: "pointer" }}
-              >
-                <td>{transaction.date}</td>
-                <td style={getSubcategoryStyle(transaction.subcategory)}>
-                  {transaction.subcategory.replace("_", " ")}
-                </td>
-
-                <td>{transaction.note || ""}</td>
-
-                <td>
-                  {profile ? CURRENCY_SYMBOLS[profile.currency] : ""}{" "}
-                  {transaction.amount % 1 === 0
-                    ? transaction.amount
-                    : Number(transaction.amount).toFixed(2)}
-                </td>
-              </tr>
-            ))}
+            {Object.keys(groupedTransactions)
+              .sort()
+              .map((date) => (
+                <React.Fragment key={date}>
+                  <tr
+                    style={{ backgroundColor: "#f0f0f0", fontWeight: "bold" }}
+                  >
+                    <td colSpan="4">{date}</td>
+                  </tr>
+                  {groupedTransactions[date].map((transaction) => (
+                    <tr
+                      key={transaction.id}
+                      onClick={() => handleRowClick(transaction)}
+                      style={{ cursor: "pointer" }}
+                    >
+                      <td></td>
+                      <td
+                        style={{
+                          color: getCategoryColor(transaction.category),
+                        }}
+                      >
+                        {transaction.subcategory.replace("_", " ")}
+                      </td>
+                      <td>{transaction.note || ""}</td>
+                      <td
+                        style={{
+                          color: getCategoryColor(transaction.category),
+                        }}
+                      >
+                        {transaction.category === "expense" ? "-" : "+"}
+                        {transaction.amount % 1 === 0
+                          ? transaction.amount
+                          : Number(transaction.amount).toFixed(2)}{" "}
+                        {profile ? CURRENCY_SYMBOLS[profile.currency] : ""}
+                      </td>
+                    </tr>
+                  ))}
+                </React.Fragment>
+              ))}
           </tbody>
         </table>
       )}

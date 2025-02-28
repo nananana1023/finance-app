@@ -1,6 +1,6 @@
 import { createContext, useState, useEffect } from "react";
 import axios from "axios";
-import { refreshAccessToken } from "../utils/auth"; // ✅ Import token refresh function
+import { refreshAccessToken } from "../utils/auth";
 
 const AuthContext = createContext();
 
@@ -12,7 +12,7 @@ export const AuthProvider = ({ children }) => {
     const fetchUser = async () => {
       let token = localStorage.getItem("accessToken");
 
-      console.log("🔍 Checking token before request:", token);
+      console.log("Checking token before request:", token);
 
       if (!token) {
         console.log("⚠ No token found. User is not authenticated.");
@@ -26,11 +26,11 @@ export const AuthProvider = ({ children }) => {
           headers: { Authorization: `Bearer ${token}` },
         });
 
-        console.log("✅ User data received:", response.data);
+        console.log("User data received:", response.data);
         setUser(response.data);
       } catch (error) {
         console.error(
-          "❌ Error fetching user:",
+          "Error fetching user:",
           error.response?.data || error.message
         );
 
@@ -48,18 +48,18 @@ export const AuthProvider = ({ children }) => {
               );
 
               console.log(
-                "✅ User data received after refresh:",
+                "User data received after refresh:",
                 retryResponse.data
               );
               setUser(retryResponse.data);
             } catch (retryError) {
               console.error(
-                "❌ Failed after refreshing token:",
+                "Failed after refreshing token:",
                 retryError.response?.data || retryError.message
               );
             }
           } else {
-            console.log("⚠ User must log in again.");
+            console.log("User must log in again.");
           }
         }
       } finally {

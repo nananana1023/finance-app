@@ -88,7 +88,7 @@ const UserHome = () => {
 
     fetchProfile();
     fetchSummary();
-  }, [user]);
+  }, [user, selectedMonth]);
 
   const data = [
     { category: "Expense", amount: summary.total_expense, color: "#ec7063" },
@@ -96,24 +96,13 @@ const UserHome = () => {
     { category: "Savings", amount: summary.total_investment, color: "#5dade2" },
   ];
 
-  // Only construct spendingData if profile is available
-  const spendingData =
-    profile && profile.monthly_spending_goal
-      ? [
-          {
-            name: "Spending",
-            expense: summary.total_expense,
-            remaining: profile.monthly_spending_goal - summary.total_expense,
-          },
-        ]
-      : [];
-
   return (
     <div>
       <Header />
       <div className="success-container">
         <p>{location.state?.message || null}</p>
       </div>
+      {/* month choose */}
       <h2>Monthly Financial Overview</h2>
       <label>Select Month:</label>
       <input
@@ -122,8 +111,12 @@ const UserHome = () => {
         onChange={(e) => setSelectedMonth(e.target.value)}
       />
       {!isDataEmpty ? (
-        <ResponsiveContainer width="60%" height={400}>
-          <BarChart data={data}>
+        // bar chart - sum of categories
+        <ResponsiveContainer width="50%" height={400}>
+          <BarChart
+            data={data}
+            margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
+          >
             <XAxis dataKey="category" />
             <YAxis hide />
             <Tooltip />
@@ -138,47 +131,6 @@ const UserHome = () => {
         </ResponsiveContainer>
       ) : (
         <p>No transactions recorded for this month.</p>
-      )}
-
-      {/* Render horizontal stacked chart only if profile is available */}
-      {profile && profile.monthly_spending_goal && (
-        <div style={{ marginTop: "2rem" }}>
-          <h3>Spending Goal Progress</h3>
-          <ResponsiveContainer width="100%" height={100}>
-            <BarChart
-              layout="vertical"
-              data={spendingData}
-              margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
-            >
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis
-                type="number"
-                domain={[0, profile.monthly_spending_goal]}
-                hide
-              />
-              <YAxis type="category" dataKey="name" hide />
-              <Tooltip />
-              <Legend />
-              {/* Bar for the occupied portion */}
-              <Bar dataKey="expense" stackId="a" fill="#3498db">
-                <LabelList dataKey="expense" position="inside" fill="black" />
-              </Bar>
-              {/* Bar for the remaining portion */}
-              <Bar
-                dataKey="remaining"
-                stackId="a"
-                fill="#d6eaf8"
-                minPointSize={5}
-              >
-                <LabelList
-                  dataKey="remaining"
-                  position="insideLeft"
-                  fill="black"
-                />
-              </Bar>
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
       )}
     </div>
   );
