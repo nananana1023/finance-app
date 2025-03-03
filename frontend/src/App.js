@@ -8,23 +8,25 @@ import UserHome from "./pages/UserHome";
 import Transactions from "./pages/Transactions";
 import Insights from "./pages/Insights";
 import Profile from "./pages/Profile";
+import { MonthProvider } from "./context/MonthContext";
 
 function App() {
   return (
     <Router>
       {" "}
-      {/* ✅ Router wraps everything */}
       <AuthProvider>
-        <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
-          <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/userhome" element={<UserHome />} />
-          <Route path="/transactions" element={<Transactions />} />
-          <Route path="/insights" element={<Insights />} />
-          <Route path="/profile" element={<Profile />} />
-        </Routes>
+        <MonthProvider>
+          <Routes>
+            <Route path="/" element={<Home />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<Register />} />
+            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/userhome" element={<UserHome />} />
+            <Route path="/transactions" element={<Transactions />} />
+            <Route path="/insights" element={<Insights />} />
+            <Route path="/profile" element={<Profile />} />
+          </Routes>
+        </MonthProvider>
       </AuthProvider>
     </Router>
   );

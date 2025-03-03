@@ -4,12 +4,12 @@ export const refreshAccessToken = async () => {
   const refreshToken = localStorage.getItem("refreshToken");
 
   if (!refreshToken) {
-    console.error("⚠ No refresh token found. User needs to log in again.");
+    console.error("No refresh token found. Need to log in again.");
     return null;
   }
 
   try {
-    console.log("🔄 Refreshing token...");
+    console.log("Refreshing token");
     const response = await axios.post(
       "http://127.0.0.1:8000/api/token/refresh/",
       {
@@ -17,12 +17,12 @@ export const refreshAccessToken = async () => {
       }
     );
 
-    console.log("✅ New access token received:", response.data.access);
+    console.log("New access token:", response.data.access);
     localStorage.setItem("accessToken", response.data.access);
     return response.data.access;
   } catch (error) {
     console.error(
-      "❌ Error refreshing token:",
+      "Error refreshing token:",
       error.response?.data || error.message
     );
     return null;

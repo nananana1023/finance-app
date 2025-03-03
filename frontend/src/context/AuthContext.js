@@ -12,30 +12,29 @@ export const AuthProvider = ({ children }) => {
     const fetchUser = async () => {
       let token = localStorage.getItem("accessToken");
 
-      console.log("Checking token before request:", token);
+      console.log("Token:", token);
 
       if (!token) {
-        console.log("⚠ No token found. User is not authenticated.");
+        console.log("No token found. User is not authenticated.");
         setLoading(false);
         return;
       }
 
       try {
-        console.log("📡 Fetching user data...");
         const response = await axios.get("http://127.0.0.1:8000/auth/user/", {
           headers: { Authorization: `Bearer ${token}` },
         });
 
-        console.log("User data received:", response.data);
+        console.log("User:", response.data);
         setUser(response.data);
       } catch (error) {
         console.error(
-          "Error fetching user:",
+          "Error getting user:",
           error.response?.data || error.message
         );
 
         if (error.response?.status === 401) {
-          console.log("🔄 Token expired. Refreshing...");
+          console.log("Refreshing token");
           token = await refreshAccessToken();
 
           if (token) {
@@ -47,10 +46,7 @@ export const AuthProvider = ({ children }) => {
                 }
               );
 
-              console.log(
-                "User data received after refresh:",
-                retryResponse.data
-              );
+              console.log("User data after refresh:", retryResponse.data);
               setUser(retryResponse.data);
             } catch (retryError) {
               console.error(
@@ -71,7 +67,7 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   const logoutUser = () => {
-    console.log("🚪 Logging out user...");
+    console.log("Logging out");
     localStorage.removeItem("accessToken");
     localStorage.removeItem("refreshToken");
     setUser(null);

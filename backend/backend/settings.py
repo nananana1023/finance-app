@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 
 from pathlib import Path
 import os
+from datetime import timedelta
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -92,7 +93,7 @@ DATABASES = {
         'USER': 'postgres', 
         'PASSWORD': 'polokolo0',  
         'HOST': 'localhost',  
-        'PORT': '5432',  # Default PostgreSQL port
+        'PORT': '5432',  # PostgreSQL port
     }
 }
 
@@ -154,7 +155,7 @@ REST_FRAMEWORK = {
 }
 
 
-# For Email Verification
+# Email sending
 EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
 EMAIL_HOST = "smtp.gmail.com"  
 EMAIL_PORT = 587
@@ -165,3 +166,7 @@ EMAIL_HOST_PASSWORD = "jwef unvx osvg qesq"
 
 AUTH_USER_MODEL = "accounts.CustomUser"
 
+SIMPLE_JWT = {
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=10),
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=1),
+}

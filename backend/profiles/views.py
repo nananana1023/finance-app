@@ -7,7 +7,9 @@ from django.db.models import Sum
 from rest_framework.decorators import api_view, permission_classes, action
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
+import calendar
 
+#viewset - Group several related actions in one class (CRUD)
 class UserFinancialProfileViewSet(viewsets.ModelViewSet):
     queryset = UserFinancialProfile.objects.all()
     serializer_class = UserFinancialProfileSerializer
@@ -45,6 +47,8 @@ class TransactionViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data)
 
+#function-based views handle HTTP requests directly
+
 #Filters transactions by selected month and user.
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
@@ -59,3 +63,40 @@ def monthly_summary(request, year, month):
     }
 
     return Response(summary)     
+
+#add transactions of given category of given month 
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def sum_cat_month(request, cat, year, month):
+    user = request.user
+    trans_sum = (Transaction.objects.filter(user=user, date__year=year, date__month=month, subcategory=cat)).aggregate(Sum("amount"))
+    
+    return Response(trans_sum)
+    
+#total expenses over months until now
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def expenses_months(request):
+    user = request.user
+    cur_year, cur_month = datetime.now().year, datetime.now().month
+    total_expense = Transaction.objects.filter(user=user, date__year=cur_year, date__month=cur_month, category="expense").aggregate(Sum("amount"))["amount__sum"] or 0
+    all_expenses=[{"year": cur_year, "month": cur_month,"month_name": calendar.month_name[cur_month], "amount": total_expense}] #initial value - current month's total 
+    
+    while total_expense>0:
+        
+        if cur_month==1:
+            cur_year-=1
+            cur_month=12
+        else:
+            cur_month-=1
+        
+        total_expense=Transaction.objects.filter(user=user, date__year=cur_year, date__month=cur_month, category="expense").aggregate(Sum("amount"))["amount__sum"] or 0
+        if total_expense==0:
+            break
+        all_expenses.append({"year": cur_year, "month": cur_month, "month_name": calendar.month_name[cur_month], "amount": total_expense})
+
+        
+    all_expenses.reverse()
+    return Response(all_expenses)    
+    
+    

@@ -1,5 +1,5 @@
-import { useEffect, useState, useContext } from "react";
-import React, { Fragment } from "react";
+import { useEffect, useState, useContext, Fragment } from "react";
+import React from "react";
 import axios from "axios";
 import AuthContext from "../context/AuthContext";
 import Header from "../components/Header";
@@ -15,6 +15,7 @@ import {
   Legend,
   Cell,
 } from "recharts";
+import MonthContext from "../context/MonthContext";
 
 const CURRENCY_SYMBOLS = {
   USD: "$",
@@ -39,16 +40,18 @@ const CURRENCY_SYMBOLS = {
 };
 
 const getCategoryColor = (cat) => {
-  if (cat == "expense") return "#78281f";
-  else if (cat == "income") return "#196f3d";
+  if (cat === "expense") return "#78281f";
+  else if (cat === "income") return "#196f3d";
   else return "#2e4053";
 };
 
 const Transactions = () => {
   const { user } = useContext(AuthContext);
   const [transactions, setTransactions] = useState([]);
+  const [investments, setInvest] = useState([]);
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
+  const { selectedMonth, setSelectedMonth } = useContext(MonthContext);
   const [error, setError] = useState(null);
   const [showForm, setShowForm] = useState(false);
   const [summary, setSummary] = useState({
@@ -56,17 +59,14 @@ const Transactions = () => {
     total_income: 0,
     total_investment: 0,
   });
-  const [selectedMonth, setSelectedMonth] = useState(
-    new Date().toISOString().slice(0, 7)
-  );
   const [newTransaction, setNewTransaction] = useState({
     subcategory: "",
     amount: "",
-
     note: "",
-    date: new Date().toISOString().split("T")[0], // Default to today
+    date: new Date().toISOString().split("T")[0],
   });
   const [selectedTransaction, setSelectedTransaction] = useState(null);
+
   const token = localStorage.getItem("accessToken");
   const headers = { Authorization: `Bearer ${token}` };
 
@@ -74,48 +74,42 @@ const Transactions = () => {
     const fetchProfileAndTransactions = async () => {
       const [year, month] = selectedMonth.split("-");
 
-      console.log("Token from localStorage:", token);
-      console.log("User data from AuthContext:", user);
-      console.log("Selected month:", month);
-
       if (!token) {
         setError("User is not authenticated.");
         setLoading(false);
         return;
       }
-
-      if (!user) {
-        return;
-      }
+      if (!user) return;
 
       try {
         const profileResponse = await axios.get(
           "http://127.0.0.1:8000/api/financial-profile/",
           { headers }
         );
-        console.log("Financial profile API Response:", profileResponse.data);
-
         const transactionsResponse = await axios.get(
           `http://127.0.0.1:8000/api/transactions/by-month/${year}/${month}/`,
           { headers }
         );
 
-        console.log("Transactions API Response:", transactionsResponse.data);
-
+        // Filter out investments from normal transactions.
         const userTransactions = transactionsResponse.data.filter(
-          (t) => t.user === user.user_id
+          (t) => t.user === user.user_id && t.category !== "savings_investment"
         );
-        console.log("Filtered Transactions for User:", userTransactions);
+        const userInvestment = transactionsResponse.data.filter(
+          (t) => t.user === user.user_id && t.category === "savings_investment"
+        );
+
         setTransactions(userTransactions);
+        setInvest(userInvestment);
 
         const userProfile = profileResponse.data.find(
           (p) => p.user === user.user_id
         );
         setProfile(userProfile || null);
-      } catch (error) {
+      } catch (err) {
         console.error(
           "Error fetching user data:",
-          error.response?.data || error.message
+          err.response?.data || err.message
         );
         setError("Failed to load user data.");
       } finally {
@@ -125,20 +119,38 @@ const Transactions = () => {
 
     const fetchSummary = async () => {
       const [year, month] = selectedMonth.split("-");
-
       try {
         const response = await axios.get(
           `http://127.0.0.1:8000/api/monthly-summary/${year}/${month}/`,
           { headers }
         );
         setSummary(response.data);
-      } catch (error) {
-        console.error("Error fetching monthly summary:", error);
+      } catch (err) {
+        console.error("Error fetching monthly summary:", err);
       }
     };
+
     fetchSummary();
     fetchProfileAndTransactions();
-  }, [user, selectedMonth]);
+  }, [user, selectedMonth, selectedTransaction, newTransaction]);
+
+  const groupedTransactions = transactions.reduce((groups, transaction) => {
+    const date = transaction.date;
+    if (!groups[date]) {
+      groups[date] = [];
+    }
+    groups[date].push(transaction);
+    return groups;
+  }, {});
+
+  const groupedInvestments = investments.reduce((groups, t) => {
+    const date = t.date;
+    if (!groups[date]) {
+      groups[date] = [];
+    }
+    groups[date].push(t);
+    return groups;
+  }, {});
 
   const handleInputChange = (e) => {
     setNewTransaction({ ...newTransaction, [e.target.name]: e.target.value });
@@ -146,35 +158,30 @@ const Transactions = () => {
 
   const handleAddTransaction = async (e) => {
     e.preventDefault();
-
     try {
-      //POST request to create trans
       const response = await axios.post(
         "http://127.0.0.1:8000/api/transactions/",
         {
           user: user.user_id,
           subcategory: newTransaction.subcategory,
           amount: newTransaction.amount,
-
           note: newTransaction.note,
           date: newTransaction.date,
         },
         { headers }
       );
-
       setTransactions([...transactions, response.data]);
       setShowForm(false);
       setNewTransaction({
         subcategory: "",
         amount: "",
-
         note: "",
         date: new Date().toISOString().split("T")[0],
       });
-    } catch (error) {
+    } catch (err) {
       console.error(
         "Error adding transaction:",
-        error.response?.data || error.message
+        err.response?.data || err.message
       );
     }
   };
@@ -192,25 +199,22 @@ const Transactions = () => {
 
   const handleSaveEdit = async () => {
     if (!selectedTransaction) return;
-
     try {
-      //update request to API
       const response = await axios.put(
         `http://127.0.0.1:8000/api/transactions/${selectedTransaction.id}/`,
         selectedTransaction,
         { headers }
       );
-
       setTransactions(
         transactions.map((t) =>
           t.id === selectedTransaction.id ? response.data : t
         )
       );
       setSelectedTransaction(null);
-    } catch (error) {
+    } catch (err) {
       console.error(
         "Error updating transaction:",
-        error.response?.data || error.message
+        err.response?.data || err.message
       );
     }
   };
@@ -218,106 +222,201 @@ const Transactions = () => {
   const handleDeleteTransaction = async () => {
     if (!selectedTransaction) return;
     try {
-      //delete request to API
       await axios.delete(
         `http://127.0.0.1:8000/api/transactions/${selectedTransaction.id}/`,
         { headers }
       );
-
       setTransactions(
         transactions.filter((t) => t.id !== selectedTransaction.id)
       );
       setSelectedTransaction(null);
-    } catch (error) {
+    } catch (err) {
       console.error(
         "Error deleting transaction:",
-        error.response?.data || error.message
+        err.response?.data || err.message
       );
     }
   };
 
-  const groupedTransactions = transactions.reduce((groups, transaction) => {
-    const date = transaction.date;
-    if (!groups[date]) {
-      // key is date, value is array of transactions for that day
-      groups[date] = [];
-    }
-    groups[date].push(transaction);
-    return groups;
-  }, {});
+  const formatMonth = (date) => {
+    const year = date.getFullYear();
+    const month = (date.getMonth() + 1).toString().padStart(2, "0");
+    return `${year}-${month}`;
+  };
+
+  const handlePrevMonth = () => {
+    const [year, month] = selectedMonth.split("-");
+    const currentDate = new Date(parseInt(year), parseInt(month) - 1);
+    currentDate.setMonth(currentDate.getMonth() - 1);
+    setSelectedMonth(formatMonth(currentDate));
+  };
+
+  const handleNextMonth = () => {
+    const [year, month] = selectedMonth.split("-");
+    const currentDate = new Date(parseInt(year), parseInt(month) - 1);
+    currentDate.setMonth(currentDate.getMonth() + 1);
+    setSelectedMonth(formatMonth(currentDate));
+  };
+
+  if (loading) return <p>Loading transactions...</p>;
+  if (error) return <p style={{ color: "red" }}>{error}</p>;
 
   const spendingData =
     profile && profile.monthly_spending_goal
       ? [
           {
             name: "Spending",
-            expense: summary.total_expense,
+            Expense: summary.total_expense,
+            overspent:
+              summary.total_expense > profile.monthly_spending_goal
+                ? summary.total_expense - profile.monthly_spending_goal
+                : 0,
             remaining: profile.monthly_spending_goal - summary.total_expense,
           },
         ]
       : [];
-
-  if (loading) return <p>Loading transactions...</p>;
-  if (error) return <p style={{ color: "red" }}>{error}</p>;
 
   return (
     <div>
       <Header />
       <h2>Your Transactions</h2>
 
+      {/* select month  */}
       <label>Select Month:</label>
-      <input
-        type="month"
-        value={selectedMonth}
-        onChange={(e) => setSelectedMonth(e.target.value)}
-      />
-      {/* bar with spending goal */}
+      <div style={{ display: "flex", alignItems: "center" }}>
+        <button onClick={handlePrevMonth}>{"<"}</button>
+        <input
+          type="month"
+          value={selectedMonth}
+          onChange={(e) => setSelectedMonth(e.target.value)}
+          style={{ margin: "0 10px" }}
+        />
+        <button onClick={handleNextMonth}>{">"}</button>
+      </div>
+
+      {/* Bar with spending goal */}
       {profile && profile.monthly_spending_goal && (
         <div>
           <h3>
             <strong>Monthly Spending Goal:</strong>{" "}
-            {CURRENCY_SYMBOLS[profile.currency] || profile.currency}{" "}
             {profile.monthly_spending_goal}
+            {CURRENCY_SYMBOLS[profile.currency] || profile.currency}
           </h3>
-          <ResponsiveContainer width="80%" height={100}>
-            <BarChart
-              layout="vertical"
-              data={spendingData}
-              margin={{ top: 20, right: 30, left: 20, bottom: 20 }}
-            >
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis
-                type="number"
-                domain={[0, profile.monthly_spending_goal]}
-                hide
-              />
-              <YAxis type="category" dataKey="name" hide />
-              <Tooltip />
-              <Legend color="black" />
-              {/* occupied */}
-              <Bar dataKey="expense" stackId="a" fill="#3498db">
-                <LabelList dataKey="expense" position="inside" fill="black" />
-              </Bar>
-              {/*  remaining  */}
-              <Bar
-                dataKey="remaining"
-                stackId="a"
-                fill="#d6eaf8"
-                minPointSize={5}
+          {/* overspent case */}
+          {summary.total_expense > profile.monthly_spending_goal ? (
+            <ResponsiveContainer width="80%" height={100}>
+              <BarChart
+                layout="vertical"
+                data={spendingData}
+                margin={{ top: 20, right: 30, left: 20, bottom: 20 }}
               >
-                <LabelList
-                  dataKey="remaining"
-                  position="insideLeft"
-                  fill="black"
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis
+                  type="number"
+                  // Set domain to cover both the spending goal and the extra overspent amount
+                  domain={[0, summary.total_expense]}
+                  hide
                 />
-              </Bar>
-            </BarChart>
-          </ResponsiveContainer>
+                <YAxis type="category" dataKey="name" hide />
+                <Tooltip />
+                <Legend />
+                {/* Render the Expense bar first */}
+                <Bar
+                  dataKey="Expense"
+                  stackId="a"
+                  fill="#FFCCCC"
+                  name="Expense"
+                >
+                  <LabelList
+                    dataKey="Expense"
+                    position="inside"
+                    fill="black"
+                    formatter={(value) =>
+                      `${value}${
+                        CURRENCY_SYMBOLS[profile.currency] || profile.currency
+                      }`
+                    }
+                  />
+                </Bar>
+                {/* Render the Overspent bar after so it stacks on top */}
+                <Bar
+                  dataKey="overspent"
+                  stackId="a"
+                  fill="#FF0000"
+                  name="Overspent"
+                >
+                  <LabelList
+                    dataKey="overspent"
+                    position="insideTop"
+                    fill="black"
+                    formatter={(value) =>
+                      `${value}${
+                        CURRENCY_SYMBOLS[profile.currency] || profile.currency
+                      }`
+                    }
+                  />
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
+          ) : (
+            // within spending case
+
+            <ResponsiveContainer width="80%" height={100}>
+              <BarChart
+                layout="vertical"
+                data={spendingData}
+                margin={{ top: 20, right: 30, left: 20, bottom: 20 }}
+              >
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis
+                  type="number"
+                  domain={[0, profile.monthly_spending_goal]}
+                  hide
+                />
+                <YAxis type="category" dataKey="name" hide />
+                <Tooltip />
+                <Legend />
+                {/* don't show bar if expense = 0 */}
+                {spendingData.length && spendingData[0].Expense !== 0 && (
+                  <Bar dataKey="Expense" stackId="a" fill="#3498db">
+                    <LabelList
+                      dataKey="Expense"
+                      position="inside"
+                      fill="black"
+                      formatter={(value) =>
+                        `${value}${
+                          CURRENCY_SYMBOLS[profile.currency] || profile.currency
+                        }`
+                      }
+                    />
+                  </Bar>
+                )}
+
+                <Bar
+                  dataKey="remaining"
+                  stackId="a"
+                  fill="#d6eaf8"
+                  minPointSize={5}
+                >
+                  <LabelList
+                    dataKey="remaining"
+                    position="insideLeft"
+                    fill="black"
+                    formatter={(value) =>
+                      `${value}${
+                        CURRENCY_SYMBOLS[profile.currency] || profile.currency
+                      }`
+                    }
+                  />
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
+          )}
         </div>
       )}
 
-      {/* show */}
-      {transactions.length === 0 ? (
+      {/* Show transactions */}
+      {Object.keys(groupedTransactions).length === 0 ? (
         <p>No transactions found.</p>
       ) : (
         <table border="1">
@@ -333,7 +432,7 @@ const Transactions = () => {
             {Object.keys(groupedTransactions)
               .sort()
               .map((date) => (
-                <React.Fragment key={date}>
+                <Fragment key={date}>
                   <tr
                     style={{ backgroundColor: "#f0f0f0", fontWeight: "bold" }}
                   >
@@ -367,14 +466,13 @@ const Transactions = () => {
                       </td>
                     </tr>
                   ))}
-                </React.Fragment>
+                </Fragment>
               ))}
           </tbody>
         </table>
       )}
 
-      {/* edit */}
-
+      {/* Edit transaction */}
       {selectedTransaction && (
         <div className="transaction-detail">
           <h3>Edit Transaction</h3>
@@ -428,7 +526,6 @@ const Transactions = () => {
               onChange={handleEditChange}
             />
           </label>
-
           <label>
             Note:
             <input
@@ -448,7 +545,6 @@ const Transactions = () => {
             />
           </label>
           <button onClick={handleSaveEdit}>Save</button>
-          {/* delete */}
           <button
             onClick={handleDeleteTransaction}
             style={{
@@ -463,9 +559,8 @@ const Transactions = () => {
         </div>
       )}
 
-      {/* add */}
+      {/* Add transaction */}
       <button onClick={() => setShowForm(!showForm)}>+</button>
-
       {showForm && (
         <form onSubmit={handleAddTransaction}>
           <label>
@@ -519,7 +614,6 @@ const Transactions = () => {
               required
             />
           </label>
-
           <label>
             Note:{" "}
             <input
@@ -541,6 +635,55 @@ const Transactions = () => {
           </label>
           <button type="submit">Add Transaction</button>
         </form>
+      )}
+
+      {/* Show investment history */}
+      <h2>Your investment history</h2>
+      {Object.keys(groupedInvestments).length === 0 ? (
+        <p>No investments found.</p>
+      ) : (
+        <table border="1">
+          <thead>
+            <tr>
+              <th width="120">Date</th>
+              <th>Category</th>
+              <th>Note</th>
+              <th>Amount</th>
+            </tr>
+          </thead>
+          <tbody>
+            {Object.keys(groupedInvestments)
+              .sort()
+              .map((date) => (
+                <Fragment key={date}>
+                  <tr
+                    style={{ backgroundColor: "#f0f0f0", fontWeight: "bold" }}
+                  >
+                    <td colSpan="4">{date}</td>
+                  </tr>
+                  {groupedInvestments[date].map((t) => (
+                    <tr
+                      key={t.id}
+                      onClick={() => handleRowClick(t)}
+                      style={{ cursor: "pointer" }}
+                    >
+                      <td></td>
+                      <td style={{ color: getCategoryColor(t.category) }}>
+                        {t.subcategory.replace("_", " ")}
+                      </td>
+                      <td>{t.note || ""}</td>
+                      <td style={{ color: getCategoryColor(t.category) }}>
+                        {t.amount % 1 === 0
+                          ? t.amount
+                          : Number(t.amount).toFixed(2)}{" "}
+                        {profile ? CURRENCY_SYMBOLS[profile.currency] : ""}
+                      </td>
+                    </tr>
+                  ))}
+                </Fragment>
+              ))}
+          </tbody>
+        </table>
       )}
     </div>
   );
