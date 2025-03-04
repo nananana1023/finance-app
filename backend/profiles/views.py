@@ -63,15 +63,6 @@ def monthly_summary(request, year, month):
     }
 
     return Response(summary)     
-
-#add transactions of given category of given month 
-@api_view(['GET'])
-@permission_classes([IsAuthenticated])
-def sum_cat_month(request, cat, year, month):
-    user = request.user
-    trans_sum = (Transaction.objects.filter(user=user, date__year=year, date__month=month, subcategory=cat)).aggregate(Sum("amount"))
-    
-    return Response(trans_sum)
     
 #total expenses over months until now
 @api_view(['GET'])
@@ -98,5 +89,21 @@ def expenses_months(request):
         
     all_expenses.reverse()
     return Response(all_expenses)    
-    
-    
+
+#sum of nonzero subcategories for given month 
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def sum_subcategories_month(request, year, month):
+    user = request.user
+   
+    sums = (
+        Transaction.objects
+        .filter(user=user, date__year=year, date__month=month)
+        .values('subcategory', 'category')
+        .annotate(total_amount=Sum('amount'))
+    )
+
+    # only keep nonzero sums
+    sums = [entry for entry in sums if entry['total_amount'] > 0]
+
+    return Response(sums)

@@ -19,6 +19,7 @@ import {
 } from "recharts";
 import Header from "../components/Header";
 import MonthContext from "../context/MonthContext";
+import PieChartContainer from "./PieChart";
 
 const CURRENCY_SYMBOLS = {
   USD: "$",
@@ -56,6 +57,7 @@ const UserHome = () => {
     total_investment: 0,
   });
   const [total_expenses, setTotalExpenses] = useState(null);
+  const [pieData, setPieData] = useState([]);
   const location = useLocation();
   const navigate = useNavigate();
   const isDataEmpty =
@@ -77,22 +79,6 @@ const UserHome = () => {
         console.error("Error fetching monthly summary:", error);
       }
     };
-
-    // fetchCatSum =  async () => {
-    //   const [year, month] = selectedMonth.split("-");
-
-    //   //
-
-    //   try {
-    //     const response = await axios.get(
-    //       `http://127.0.0.1:8000/api/sum-cat-month/${cat}/${year}/${month}/`,
-    //       { headers }
-    //     );
-    //     //setCatSum(response.data);
-    //   } catch (error) {
-    //     console.error("Error fetching category sum:", error);
-    //   }
-    // };
 
     const fetchTotalExpenses = async () => {
       try {
@@ -131,6 +117,21 @@ const UserHome = () => {
       }
     };
 
+    const fetchPieData = async () => {
+      const [year, month] = selectedMonth.split("-");
+      try {
+        const response = await axios.get(
+          `http://127.0.0.1:8000/api/sum-subcategories-month/${year}/${month}/`,
+          { headers }
+        );
+        console.log("Sum per category: ", response.data);
+        setPieData(response.data);
+      } catch (error) {
+        console.error("Error fetching sum per category:", error);
+      }
+    };
+
+    fetchPieData();
     fetchProfile();
     fetchSummary();
     fetchTotalExpenses();
@@ -241,7 +242,7 @@ const UserHome = () => {
 
       {/* select month  */}
 
-      <div style={{ marginLeft: 50, display: "flex", alignItems: "center" }}>
+      <div style={{ marginLeft: 70, display: "flex", alignItems: "center" }}>
         <button onClick={handlePrevMonth}>{"<"}</button>
         <input
           type="month"
@@ -252,35 +253,48 @@ const UserHome = () => {
         <button onClick={handleNextMonth}>{">"}</button>
       </div>
 
-      <div>
-        {!isDataEmpty ? (
-          // bar chart - sum of categories
-          <ResponsiveContainer marginLeft={50} width="50%" height={400}>
-            <BarChart
-              data={data}
-              margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
-            >
-              <XAxis dataKey="category" />
-              <YAxis hide />
-              <Bar dataKey="amount">
-                {data.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={entry.color} />
-                ))}
-                <LabelList
-                  dataKey="amount"
-                  position="top"
-                  formatter={(value) =>
-                    `${value}${
-                      CURRENCY_SYMBOLS[profile.currency] || profile.currency
-                    }`
-                  }
-                />
-              </Bar>
-            </BarChart>
-          </ResponsiveContainer>
-        ) : (
-          <p>No transactions recorded for this month.</p>
-        )}
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-around",
+          alignItems: "flex-start",
+        }}
+      >
+        {/* Bar Chart Container */}
+        <div style={{ width: "50%" }}>
+          {!isDataEmpty ? (
+            <ResponsiveContainer width="100%" height={400}>
+              <BarChart
+                data={data}
+                margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
+              >
+                <XAxis dataKey="category" />
+                <YAxis hide />
+                <Bar dataKey="amount">
+                  {data.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={entry.color} />
+                  ))}
+                  <LabelList
+                    dataKey="amount"
+                    position="top"
+                    formatter={(value) =>
+                      `${value}${
+                        CURRENCY_SYMBOLS[profile.currency] || profile.currency
+                      }`
+                    }
+                  />
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
+          ) : (
+            <p>No transactions recorded for this month.</p>
+          )}
+        </div>
+
+        {/* Pie Chart Container */}
+        <div style={{ width: "50%" }}>
+          <PieChartContainer data={pieData} />
+        </div>
       </div>
     </div>
   );

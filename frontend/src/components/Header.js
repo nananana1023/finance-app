@@ -7,7 +7,7 @@ const Header = () => {
       <h1>💸 MoneySavvy</h1>
       <ul>
         <li>
-          <Link to="/userhome">Home</Link>
+          <Link to="/userhome">Overview</Link>
         </li>
         <li>
           <Link to="/transactions">Transactions</Link>

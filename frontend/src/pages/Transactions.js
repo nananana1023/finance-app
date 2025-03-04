@@ -282,7 +282,7 @@ const Transactions = () => {
       <h2>Your Transactions</h2>
 
       {/* select month  */}
-      <label>Select Month:</label>
+
       <div style={{ display: "flex", alignItems: "center" }}>
         <button onClick={handlePrevMonth}>{"<"}</button>
         <input
@@ -311,16 +311,11 @@ const Transactions = () => {
                 margin={{ top: 20, right: 30, left: 20, bottom: 20 }}
               >
                 <CartesianGrid strokeDasharray="3 3" />
-                <XAxis
-                  type="number"
-                  // Set domain to cover both the spending goal and the extra overspent amount
-                  domain={[0, summary.total_expense]}
-                  hide
-                />
+                <XAxis type="number" domain={[0, summary.total_expense]} hide />
                 <YAxis type="category" dataKey="name" hide />
                 <Tooltip />
                 <Legend />
-                {/* Render the Expense bar first */}
+
                 <Bar
                   dataKey="Expense"
                   stackId="a"
@@ -338,7 +333,7 @@ const Transactions = () => {
                     }
                   />
                 </Bar>
-                {/* Render the Overspent bar after so it stacks on top */}
+
                 <Bar
                   dataKey="overspent"
                   stackId="a"
@@ -364,21 +359,37 @@ const Transactions = () => {
             <ResponsiveContainer width="80%" height={100}>
               <BarChart
                 layout="vertical"
-                data={spendingData}
+                data={spendingData} // Each item: { name, Expense, remaining }
                 margin={{ top: 20, right: 30, left: 20, bottom: 20 }}
+                // No stackOffset="expand"
+                // reverseStackOrder optional, remove if you don't need it
               >
-                <CartesianGrid strokeDasharray="3 3" />
                 <XAxis
                   type="number"
                   domain={[0, profile.monthly_spending_goal]}
                   hide
                 />
                 <YAxis type="category" dataKey="name" hide />
-                <Tooltip />
-                <Legend />
-                {/* don't show bar if expense = 0 */}
+                <XAxis
+                  type="number"
+                  domain={[0, profile.monthly_spending_goal]}
+                  hide
+                />
+                <YAxis type="category" dataKey="name" hide />
+
+                {/* Possibly remove Legend if you don't need it */}
+                {/* <Legend /> */}
+
+                {/* Draw 'Expense' first if you want it to start at 0 (left side). */}
                 {spendingData.length && spendingData[0].Expense !== 0 && (
-                  <Bar dataKey="Expense" stackId="a" fill="#3498db">
+                  <Bar dataKey="Expense" stackId="a" radius={[0, 20, 20, 0]}>
+                    {spendingData.map((entry, index) => {
+                      const fillColor =
+                        entry.Expense < profile.monthly_spending_goal / 2
+                          ? "#28b463"
+                          : "#3498db";
+                      return <Cell key={`cell-${index}`} fill={fillColor} />;
+                    })}
                     <LabelList
                       dataKey="Expense"
                       position="inside"
@@ -392,15 +403,18 @@ const Transactions = () => {
                   </Bar>
                 )}
 
-                <Bar
-                  dataKey="remaining"
-                  stackId="a"
-                  fill="#d6eaf8"
-                  minPointSize={5}
-                >
+                {/* Then draw 'Remaining' so it stacks on top of 'Expense' */}
+                <Bar dataKey="remaining" stackId="a">
+                  {spendingData.map((entry, index) => {
+                    const fillColor =
+                      entry.Expense < profile.monthly_spending_goal / 2
+                        ? "#d5f5e3"
+                        : "#aed6f1";
+                    return <Cell key={`cell-${index}`} fill={fillColor} />;
+                  })}
                   <LabelList
                     dataKey="remaining"
-                    position="insideLeft"
+                    position="inside"
                     fill="black"
                     formatter={(value) =>
                       `${value}${

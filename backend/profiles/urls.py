@@ -1,6 +1,6 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
-from .views import UserFinancialProfileViewSet, TransactionViewSet, monthly_summary, sum_cat_month, expenses_months
+from .views import UserFinancialProfileViewSet, TransactionViewSet, monthly_summary, expenses_months, sum_subcategories_month
 
 router = DefaultRouter()
 #automatically creates endpoints
@@ -16,6 +16,6 @@ urlpatterns = [
         TransactionViewSet.as_view({'get': 'by_month'}),
         name='by-month'
     ),
-    path('sum-cat-month/<str:cat>/<int:year>/<int:month>/', sum_cat_month, name='sum-cat-month'),
     path('expenses-months', expenses_months, name='expenses-months'),
+    path('sum-subcategories-month/<int:year>/<int:month>/', sum_subcategories_month, name='sum-subcategories-month'),
 ]
