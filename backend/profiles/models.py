@@ -66,6 +66,9 @@ class Transaction(models.Model):
     date = models.DateField()
     note = models.TextField(blank=True, null=True) #optional
     merchant = models.CharField(max_length=255, blank=True, default="")   #optional
-
+    recurring=models.BooleanField(default=False)
+    nextOccur = models.DateField(blank=True, null=True)
+    
+    
     def __str__(self):
         return f"{self.user.username} - {self.subcategory} ({self.category}) - {self.amount}"

@@ -64,6 +64,7 @@ const Transactions = () => {
     amount: "",
     note: "",
     date: new Date().toISOString().split("T")[0],
+    recurring: false,
   });
   const [selectedTransaction, setSelectedTransaction] = useState(null);
 
@@ -152,8 +153,16 @@ const Transactions = () => {
     return groups;
   }, {});
 
+  // const handleInputChange = (e) => {
+  //   setNewTransaction({ ...newTransaction, [e.target.name]: e.target.value });
+  // };
+
   const handleInputChange = (e) => {
-    setNewTransaction({ ...newTransaction, [e.target.name]: e.target.value });
+    const { name, value, type, checked } = e.target;
+    setNewTransaction({
+      ...newTransaction,
+      [name]: type === "checkbox" ? checked : value,
+    });
   };
 
   const handleAddTransaction = async (e) => {
@@ -167,6 +176,7 @@ const Transactions = () => {
           amount: newTransaction.amount,
           note: newTransaction.note,
           date: newTransaction.date,
+          recurring: newTransaction.recurring,
         },
         { headers }
       );
@@ -191,9 +201,10 @@ const Transactions = () => {
   };
 
   const handleEditChange = (e) => {
+    const { name, value, type, checked } = e.target;
     setSelectedTransaction({
       ...selectedTransaction,
-      [e.target.name]: e.target.value,
+      [name]: type === "checkbox" ? checked : value,
     });
   };
 
@@ -265,13 +276,12 @@ const Transactions = () => {
     profile && profile.monthly_spending_goal
       ? [
           {
-            name: "Spending",
             Expense: summary.total_expense,
-            overspent:
+            Overspent:
               summary.total_expense > profile.monthly_spending_goal
                 ? summary.total_expense - profile.monthly_spending_goal
                 : 0,
-            remaining: profile.monthly_spending_goal - summary.total_expense,
+            Remaining: profile.monthly_spending_goal - summary.total_expense,
           },
         ]
       : [];
@@ -310,20 +320,20 @@ const Transactions = () => {
                 data={spendingData}
                 margin={{ top: 20, right: 30, left: 20, bottom: 20 }}
               >
-                <CartesianGrid strokeDasharray="3 3" />
                 <XAxis type="number" domain={[0, summary.total_expense]} hide />
                 <YAxis type="category" dataKey="name" hide />
                 <Tooltip />
-                <Legend />
+                {/* <Legend /> */}
 
                 <Bar
-                  dataKey="Expense"
+                  dataKey="Overspent"
                   stackId="a"
-                  fill="#FFCCCC"
-                  name="Expense"
+                  fill="#FF0000"
+                  name="Overspent"
+                  radius={[20, 0, 0, 20]}
                 >
                   <LabelList
-                    dataKey="Expense"
+                    dataKey="Overspent"
                     position="inside"
                     fill="black"
                     formatter={(value) =>
@@ -335,21 +345,22 @@ const Transactions = () => {
                 </Bar>
 
                 <Bar
-                  dataKey="overspent"
+                  dataKey="Expense"
                   stackId="a"
-                  fill="#FF0000"
-                  name="Overspent"
+                  fill="#FFCCCC"
+                  name="Expense"
+                  radius={[0, 20, 20, 0]}
                 >
-                  <LabelList
-                    dataKey="overspent"
-                    position="insideTop"
+                  {/* <LabelList
+                    dataKey="Expense"
+                    position="inside"
                     fill="black"
                     formatter={(value) =>
                       `${value}${
                         CURRENCY_SYMBOLS[profile.currency] || profile.currency
                       }`
                     }
-                  />
+                  /> */}
                 </Bar>
               </BarChart>
             </ResponsiveContainer>
@@ -359,10 +370,8 @@ const Transactions = () => {
             <ResponsiveContainer width="80%" height={100}>
               <BarChart
                 layout="vertical"
-                data={spendingData} // Each item: { name, Expense, remaining }
+                data={spendingData}
                 margin={{ top: 20, right: 30, left: 20, bottom: 20 }}
-                // No stackOffset="expand"
-                // reverseStackOrder optional, remove if you don't need it
               >
                 <XAxis
                   type="number"
@@ -370,19 +379,11 @@ const Transactions = () => {
                   hide
                 />
                 <YAxis type="category" dataKey="name" hide />
-                <XAxis
-                  type="number"
-                  domain={[0, profile.monthly_spending_goal]}
-                  hide
-                />
-                <YAxis type="category" dataKey="name" hide />
-
-                {/* Possibly remove Legend if you don't need it */}
                 {/* <Legend /> */}
+                <Tooltip />
 
-                {/* Draw 'Expense' first if you want it to start at 0 (left side). */}
                 {spendingData.length && spendingData[0].Expense !== 0 && (
-                  <Bar dataKey="Expense" stackId="a" radius={[0, 20, 20, 0]}>
+                  <Bar dataKey="Expense" stackId="a" radius={[20, 0, 0, 20]}>
                     {spendingData.map((entry, index) => {
                       const fillColor =
                         entry.Expense < profile.monthly_spending_goal / 2
@@ -403,8 +404,8 @@ const Transactions = () => {
                   </Bar>
                 )}
 
-                {/* Then draw 'Remaining' so it stacks on top of 'Expense' */}
-                <Bar dataKey="remaining" stackId="a">
+                <Bar dataKey="Remaining" stackId="a" radius={[0, 20, 20, 0]}>
+                  {" "}
                   {spendingData.map((entry, index) => {
                     const fillColor =
                       entry.Expense < profile.monthly_spending_goal / 2
@@ -412,7 +413,7 @@ const Transactions = () => {
                         : "#aed6f1";
                     return <Cell key={`cell-${index}`} fill={fillColor} />;
                   })}
-                  <LabelList
+                  {/* <LabelList
                     dataKey="remaining"
                     position="inside"
                     fill="black"
@@ -421,7 +422,7 @@ const Transactions = () => {
                         CURRENCY_SYMBOLS[profile.currency] || profile.currency
                       }`
                     }
-                  />
+                  /> */}
                 </Bar>
               </BarChart>
             </ResponsiveContainer>
@@ -558,6 +559,15 @@ const Transactions = () => {
               onChange={handleEditChange}
             />
           </label>
+          <label>
+            Recurring Transaction:
+            <input
+              type="checkbox"
+              name="recurring"
+              checked={selectedTransaction.recurring}
+              onChange={handleEditChange}
+            />
+          </label>
           <button onClick={handleSaveEdit}>Save</button>
           <button
             onClick={handleDeleteTransaction}
@@ -647,58 +657,74 @@ const Transactions = () => {
               required
             />
           </label>
+          <label>
+            Recurring Transaction:
+            <input
+              type="checkbox"
+              name="recurring"
+              checked={newTransaction.recurring}
+              onChange={handleInputChange}
+            />
+          </label>
           <button type="submit">Add Transaction</button>
         </form>
       )}
 
       {/* Show investment history */}
-      <h2>Your investment history</h2>
-      {Object.keys(groupedInvestments).length === 0 ? (
-        <p>No investments found.</p>
-      ) : (
-        <table border="1">
-          <thead>
-            <tr>
-              <th width="120">Date</th>
-              <th>Category</th>
-              <th>Note</th>
-              <th>Amount</th>
-            </tr>
-          </thead>
-          <tbody>
-            {Object.keys(groupedInvestments)
-              .sort()
-              .map((date) => (
-                <Fragment key={date}>
-                  <tr
-                    style={{ backgroundColor: "#f0f0f0", fontWeight: "bold" }}
-                  >
-                    <td colSpan="4">{date}</td>
-                  </tr>
-                  {groupedInvestments[date].map((t) => (
-                    <tr
-                      key={t.id}
-                      onClick={() => handleRowClick(t)}
-                      style={{ cursor: "pointer" }}
-                    >
-                      <td></td>
-                      <td style={{ color: getCategoryColor(t.category) }}>
-                        {t.subcategory.replace("_", " ")}
-                      </td>
-                      <td>{t.note || ""}</td>
-                      <td style={{ color: getCategoryColor(t.category) }}>
-                        {t.amount % 1 === 0
-                          ? t.amount
-                          : Number(t.amount).toFixed(2)}{" "}
-                        {profile ? CURRENCY_SYMBOLS[profile.currency] : ""}
-                      </td>
-                    </tr>
+      <div>
+        {Object.keys(groupedInvestments).length === 0 ? (
+          <p></p>
+        ) : (
+          <>
+            <h2>Your investment history</h2>
+            <table border="1">
+              <thead>
+                <tr>
+                  <th width="120">Date</th>
+                  <th>Category</th>
+                  <th>Note</th>
+                  <th>Amount</th>
+                </tr>
+              </thead>
+              <tbody>
+                {Object.keys(groupedInvestments)
+                  .sort()
+                  .map((date) => (
+                    <React.Fragment key={date}>
+                      <tr
+                        style={{
+                          backgroundColor: "#f0f0f0",
+                          fontWeight: "bold",
+                        }}
+                      >
+                        <td colSpan="4">{date}</td>
+                      </tr>
+                      {groupedInvestments[date].map((t) => (
+                        <tr
+                          key={t.id}
+                          onClick={() => handleRowClick(t)}
+                          style={{ cursor: "pointer" }}
+                        >
+                          <td></td>
+                          <td style={{ color: getCategoryColor(t.category) }}>
+                            {t.subcategory.replace("_", " ")}
+                          </td>
+                          <td>{t.note || ""}</td>
+                          <td style={{ color: getCategoryColor(t.category) }}>
+                            {t.amount % 1 === 0
+                              ? t.amount
+                              : Number(t.amount).toFixed(2)}{" "}
+                            {profile ? CURRENCY_SYMBOLS[profile.currency] : ""}
+                          </td>
+                        </tr>
+                      ))}
+                    </React.Fragment>
                   ))}
-                </Fragment>
-              ))}
-          </tbody>
-        </table>
-      )}
+              </tbody>
+            </table>
+          </>
+        )}
+      </div>
     </div>
   );
 };

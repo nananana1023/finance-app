@@ -13,6 +13,17 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 from pathlib import Path
 import os
 from datetime import timedelta
+from celery.schedules import crontab
+
+CELERY_BROKER_URL = "redis://localhost:6379/0"
+CELERY_RESULT_BACKEND = "redis://localhost:6379/0"
+
+CELERY_BEAT_SCHEDULE = {
+    "process-recurring-transactions-daily": {
+        "task": "profiles.tasks.process_recurring_transactions",
+        "schedule": crontab(hour=0, minute=0),  # Runs every day at midnight
+    },
+}
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
