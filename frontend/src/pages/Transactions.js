@@ -16,6 +16,7 @@ import {
   Cell,
 } from "recharts";
 import MonthContext from "../context/MonthContext";
+import "../index.css";
 
 const CURRENCY_SYMBOLS = {
   USD: "$",
@@ -53,6 +54,8 @@ const Transactions = () => {
   const [loading, setLoading] = useState(true);
   const { selectedMonth, setSelectedMonth } = useContext(MonthContext);
   const [error, setError] = useState(null);
+  const [originalTransaction, setOriginalTransaction] = useState(null);
+
   const [showForm, setShowForm] = useState(false);
   const [summary, setSummary] = useState({
     total_expense: 0,
@@ -153,10 +156,6 @@ const Transactions = () => {
     return groups;
   }, {});
 
-  // const handleInputChange = (e) => {
-  //   setNewTransaction({ ...newTransaction, [e.target.name]: e.target.value });
-  // };
-
   const handleInputChange = (e) => {
     const { name, value, type, checked } = e.target;
     setNewTransaction({
@@ -182,6 +181,17 @@ const Transactions = () => {
       );
       setTransactions([...transactions, response.data]);
       setShowForm(false);
+
+      // if recurring is on display message
+      if (newTransaction.recurring) {
+        let day = new Date(newTransaction.date).getDate();
+        if (day > 28) day = 28;
+
+        window.alert(
+          `This transaction will be automatically deducted every month on day ${day}.`
+        );
+      }
+
       setNewTransaction({
         subcategory: "",
         amount: "",
@@ -198,6 +208,8 @@ const Transactions = () => {
 
   const handleRowClick = (transaction) => {
     setSelectedTransaction({ ...transaction });
+    setOriginalTransaction({ ...transaction });
+    console.log("Selected transaction: ", transaction);
   };
 
   const handleEditChange = (e) => {
@@ -221,6 +233,23 @@ const Transactions = () => {
           t.id === selectedTransaction.id ? response.data : t
         )
       );
+
+      //if recurring was on and updated to off
+      if (originalTransaction.recurring && !selectedTransaction.recurring) {
+        window.alert(`All future recurring transactions are disabled.`);
+      }
+
+      // if recurring is on
+      if (selectedTransaction.recurring) {
+        let day = new Date(selectedTransaction.date).getDate();
+        if (day > 28) day = 28;
+
+        window.alert(
+          `This transaction will be automatically deducted every month on day ${day}.`
+        );
+      }
+
+      setOriginalTransaction(null);
       setSelectedTransaction(null);
     } catch (err) {
       console.error(
@@ -240,7 +269,12 @@ const Transactions = () => {
       setTransactions(
         transactions.filter((t) => t.id !== selectedTransaction.id)
       );
-      setSelectedTransaction(null);
+      // if recurring trans is deleted
+      if (selectedTransaction.recurring) {
+        window.alert(`All future recurring transactions are disabled.`);
+
+        setSelectedTransaction(null);
+      }
     } catch (err) {
       console.error(
         "Error deleting transaction:",
@@ -289,11 +323,10 @@ const Transactions = () => {
   return (
     <div>
       <Header />
-      <h2>Your Transactions</h2>
 
       {/* select month  */}
 
-      <div style={{ display: "flex", alignItems: "center" }}>
+      <div style={{ marginTop: 50, display: "flex", alignItems: "center" }}>
         <button onClick={handlePrevMonth}>{"<"}</button>
         <input
           type="month"
@@ -430,6 +463,8 @@ const Transactions = () => {
         </div>
       )}
 
+      <h3>Your Transactions</h3>
+
       {/* Show transactions */}
       {Object.keys(groupedTransactions).length === 0 ? (
         <p>No transactions found.</p>
@@ -559,7 +594,7 @@ const Transactions = () => {
               onChange={handleEditChange}
             />
           </label>
-          <label>
+          <label className="switch">
             Recurring Transaction:
             <input
               type="checkbox"
@@ -567,6 +602,7 @@ const Transactions = () => {
               checked={selectedTransaction.recurring}
               onChange={handleEditChange}
             />
+            <span className="slider round"></span>
           </label>
           <button onClick={handleSaveEdit}>Save</button>
           <button
@@ -657,7 +693,7 @@ const Transactions = () => {
               required
             />
           </label>
-          <label>
+          <label className="switch">
             Recurring Transaction:
             <input
               type="checkbox"
@@ -665,7 +701,9 @@ const Transactions = () => {
               checked={newTransaction.recurring}
               onChange={handleInputChange}
             />
+            <span className="slider round"></span>
           </label>
+
           <button type="submit">Add Transaction</button>
         </form>
       )}

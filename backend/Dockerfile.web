@@ -1,0 +1,21 @@
+FROM python:3.11-slim
+
+WORKDIR /app
+
+# Copy backend code into the container
+COPY . /app/
+
+# Install dependencies
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Set environment variables 
+ENV PYTHONUNBUFFERED=1
+
+# Collect static files
+RUN python manage.py collectstatic --noinput
+
+# port
+EXPOSE 8080
+
+# Start Gunicorn to serve the Django app.
+CMD ["gunicorn", "backend.wsgi:application", "--bind", "0.0.0.0:8080", "--workers", "2"]

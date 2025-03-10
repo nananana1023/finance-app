@@ -107,3 +107,60 @@ def sum_subcategories_month(request, year, month):
     sums = [entry for entry in sums if entry['total_amount'] > 0]
 
     return Response(sums)
+
+#average of all subcategories until it was 0 
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def avg_subcategories(request):
+    user = request.user
+    now = datetime.now()
+    cur_year = now.year
+    cur_month = now.month
+
+    # subcategories 
+    subcategories = Transaction.objects.filter(
+        user=user, 
+        category="expense"
+    ).values_list('subcategory', flat=True).distinct()
+
+    output = []
+    for subcat in subcategories:
+        total_amount = 0
+        count = 0
+
+        temp_year = cur_year
+        temp_month = cur_month
+        
+        while True:
+            # monthly sum for this subcat
+            monthly_total = Transaction.objects.filter(
+                user=user,
+                date__year=temp_year,
+                date__month=temp_month,
+                category="expense",
+                subcategory=subcat
+            ).aggregate(total=Sum('amount'))['total'] or 0
+
+            # until sum was 0
+            if monthly_total == 0:
+                break
+
+            total_amount += monthly_total
+            count += 1
+            
+           # print(f"cat: {subcat} current month total: {monthly_total} total: {total_amount} count: {count}")
+
+            # Move to previous month
+            if temp_month == 1:
+                temp_year -= 1
+                temp_month = 12
+            else:
+                temp_month -= 1
+
+        avg = total_amount / count if count > 0 else 0
+        output.append({
+            "subcategory": subcat,
+            "average": avg
+        })
+
+    return Response(output)
