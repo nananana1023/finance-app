@@ -4,30 +4,8 @@ import AuthContext from "../context/AuthContext";
 import { useEffect, useState, useContext } from "react";
 import axios from "axios";
 
-const CURRENCY_SYMBOLS = {
-  USD: "$",
-  EUR: "€",
-  GBP: "£",
-  BGN: "лв",
-  CZK: "Kč",
-  DKK: "kr",
-  HUF: "Ft",
-  ISK: "kr",
-  NOK: "kr",
-  PLN: "zł",
-  RON: "lei",
-  SEK: "kr",
-  CHF: "CHF",
-  JPY: "¥",
-  CAD: "C$",
-  AUD: "A$",
-  NZD: "NZ$",
-  SGD: "S$",
-  HKD: "HK$",
-};
-
 const Profile = () => {
-  const { user, logoutUser } = useContext(AuthContext);
+  const { CURRENCY_SYMBOLS, user, logoutUser } = useContext(AuthContext);
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -66,7 +44,7 @@ const Profile = () => {
           { headers }
         );
         setProfile(profileResponse.data[0]);
-        console.log("Profile data:", profile);
+        console.log("Profile data:", profileResponse.data[0]);
       } catch (error) {
         setError("Failed to load user data.");
       } finally {
@@ -109,22 +87,34 @@ const Profile = () => {
       const response = await axios.patch(
         `http://127.0.0.1:8000/api/financial-profile/${user.id}/`,
         updatedProfile,
-        { headers }
+        {
+          headers: {
+            ...headers,
+            Accept: "application/json",
+          },
+        }
       );
-
       setProfile(response.data);
       setIsEditing(false);
-
       setSuccessMessage("Your financial profile is updated successfully!");
-
+      setFormError(""); // Clear any form errors on success
       setTimeout(() => {
-        setSuccessMessage(""); // Hide message after 5 seconds
+        setSuccessMessage("");
       }, 5000);
     } catch (error) {
-      console.error(
-        "Error updating profile:",
-        error.response?.data || error.message
-      );
+      if (error.response && error.response.data) {
+        console.log("Errors:", error.response.data);
+        const errorMsg =
+          error.response.data.non_field_errors &&
+          Array.isArray(error.response.data.non_field_errors)
+            ? error.response.data.non_field_errors.join(", ")
+            : "An error occurred.";
+        // Set the error message for the form instead of the global error state
+        setFormError(errorMsg);
+      } else {
+        console.error("Error updating profile.", error);
+        setFormError("An error occurred. Please try again.");
+      }
     }
   };
 
@@ -134,7 +124,7 @@ const Profile = () => {
   return (
     <div>
       <Header />
-      <h2>👋 Hello, {user ? user.username : ""}!</h2>
+      <h2>👋 Hello, {profile ? profile.first_name : ""}!</h2>
 
       {successMessage && (
         <p
@@ -146,6 +136,19 @@ const Profile = () => {
           }}
         >
           {successMessage}
+        </p>
+      )}
+
+      {error && (
+        <p
+          style={{
+            color: "red",
+            background: "#d4edda",
+            padding: "10px",
+            borderRadius: "5px",
+          }}
+        >
+          {error}
         </p>
       )}
 

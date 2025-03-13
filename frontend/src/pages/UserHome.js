@@ -20,44 +20,26 @@ import {
 import Header from "../components/Header";
 import MonthContext from "../context/MonthContext";
 import PieChartContainer from "./PieChart";
-
-const CURRENCY_SYMBOLS = {
-  USD: "$",
-  EUR: "€",
-  GBP: "£",
-  BGN: "лв",
-  CZK: "Kč",
-  DKK: "kr",
-  HUF: "Ft",
-  ISK: "kr",
-  NOK: "kr",
-  PLN: "zł",
-  RON: "lei",
-  SEK: "kr",
-  CHF: "CHF",
-  JPY: "¥",
-  CAD: "C$",
-  AUD: "A$",
-  NZD: "NZ$",
-  SGD: "S$",
-  HKD: "HK$",
-};
+import FetchContext from "../context/FetchContext";
 
 const UserHome = () => {
-  const { user } = useContext(AuthContext);
-  const [profile, setProfile] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const { selectedMonth, setSelectedMonth } = useContext(MonthContext);
+  const { user, CURRENCY_SYMBOLS } = useContext(AuthContext);
+  const {
+    fetchSummary,
+    fetchTotalExpenses,
+    fetchProfile,
+    fetchPieData,
+    summary,
+    profile,
+    total_expenses,
+    pieData,
+  } = useContext(FetchContext);
+
+  const { selectedMonth, setSelectedMonth, handleNextMonth, handlePrevMonth } =
+    useContext(MonthContext);
+
   const token = localStorage.getItem("accessToken");
   const headers = { Authorization: `Bearer ${token}` };
-  const [summary, setSummary] = useState({
-    total_expense: 0,
-    total_income: 0,
-    total_investment: 0,
-  });
-  const [total_expenses, setTotalExpenses] = useState(null);
-  const [pieData, setPieData] = useState([]);
   const location = useLocation();
   const navigate = useNavigate();
   const isDataEmpty =
@@ -66,71 +48,6 @@ const UserHome = () => {
     summary.total_investment === 0;
 
   useEffect(() => {
-    const fetchSummary = async () => {
-      const [year, month] = selectedMonth.split("-");
-
-      try {
-        const response = await axios.get(
-          `http://127.0.0.1:8000/api/monthly-summary/${year}/${month}/`,
-          { headers }
-        );
-        setSummary(response.data);
-      } catch (error) {
-        console.error("Error fetching monthly summary:", error);
-      }
-    };
-
-    const fetchTotalExpenses = async () => {
-      try {
-        const response = await axios.get(
-          `http://127.0.0.1:8000/api/expenses-months`,
-          { headers }
-        );
-
-        setTotalExpenses(response.data);
-        console.log("total expenses: ", total_expenses);
-      } catch (error) {
-        console.error("Error fetching expenses over months:", error);
-      }
-    };
-
-    const fetchProfile = async () => {
-      console.log("Token from localStorage:", token);
-      console.log("User data from AuthContext:", user);
-
-      try {
-        const profileResponse = await axios.get(
-          "http://127.0.0.1:8000/api/financial-profile/",
-          { headers }
-        );
-        console.log("Financial profile:", profileResponse.data);
-
-        setProfile(profileResponse.data[0] || null);
-      } catch (error) {
-        console.error(
-          "Error fetching user data:",
-          error.response?.data || error.message
-        );
-        setError("Failed to load user data.");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    const fetchPieData = async () => {
-      const [year, month] = selectedMonth.split("-");
-      try {
-        const response = await axios.get(
-          `http://127.0.0.1:8000/api/sum-subcategories-month/${year}/${month}/`,
-          { headers }
-        );
-        console.log("Sum per category: ", response.data);
-        setPieData(response.data);
-      } catch (error) {
-        console.error("Error fetching sum per category:", error);
-      }
-    };
-
     fetchPieData();
     fetchProfile();
     fetchSummary();
@@ -142,26 +59,6 @@ const UserHome = () => {
     { category: "Income", amount: summary.total_income, color: "#17a589" },
     { category: "Savings", amount: summary.total_investment, color: "#5dade2" },
   ];
-
-  const formatMonth = (date) => {
-    const year = date.getFullYear();
-    const month = (date.getMonth() + 1).toString().padStart(2, "0");
-    return `${year}-${month}`;
-  };
-
-  const handlePrevMonth = () => {
-    const [year, month] = selectedMonth.split("-");
-    const currentDate = new Date(parseInt(year), parseInt(month) - 1);
-    currentDate.setMonth(currentDate.getMonth() - 1);
-    setSelectedMonth(formatMonth(currentDate));
-  };
-
-  const handleNextMonth = () => {
-    const [year, month] = selectedMonth.split("-");
-    const currentDate = new Date(parseInt(year), parseInt(month) - 1);
-    currentDate.setMonth(currentDate.getMonth() + 1);
-    setSelectedMonth(formatMonth(currentDate));
-  };
 
   const CustomXAxisTick = ({ x, y, payload, data }) => {
     const { index, value } = payload;

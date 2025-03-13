@@ -7,6 +7,29 @@ const AuthContext = createContext();
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [authMessage, setAuthMessage] = useState(null);
+
+  const CURRENCY_SYMBOLS = {
+    USD: "$",
+    EUR: "€",
+    GBP: "£",
+    BGN: "лв",
+    CZK: "Kč",
+    DKK: "kr",
+    HUF: "Ft",
+    ISK: "kr",
+    NOK: "kr",
+    PLN: "zł",
+    RON: "lei",
+    SEK: "kr",
+    CHF: "CHF",
+    JPY: "¥",
+    CAD: "C$",
+    AUD: "A$",
+    NZD: "NZ$",
+    SGD: "S$",
+    HKD: "HK$",
+  };
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -56,6 +79,7 @@ export const AuthProvider = ({ children }) => {
             }
           } else {
             console.log("User must log in again.");
+            setAuthMessage("Session ended. Please log in again.");
           }
         }
       } finally {
@@ -74,7 +98,9 @@ export const AuthProvider = ({ children }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, logoutUser }}>
+    <AuthContext.Provider
+      value={{ CURRENCY_SYMBOLS, user, loading, logoutUser }}
+    >
       {children}
     </AuthContext.Provider>
   );

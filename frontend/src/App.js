@@ -9,23 +9,25 @@ import Transactions from "./pages/Transactions";
 import Insights from "./pages/Insights";
 import Profile from "./pages/Profile";
 import { MonthProvider } from "./context/MonthContext";
+import { FetchProvider } from "./context/FetchContext";
 
 function App() {
   return (
     <Router>
-      {" "}
       <AuthProvider>
         <MonthProvider>
-          <Routes>
-            <Route path="/" element={<Home />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/register" element={<Register />} />
-            <Route path="/dashboard" element={<Dashboard />} />
-            <Route path="/userhome" element={<UserHome />} />
-            <Route path="/transactions" element={<Transactions />} />
-            <Route path="/insights" element={<Insights />} />
-            <Route path="/profile" element={<Profile />} />
-          </Routes>
+          <FetchProvider>
+            <Routes>
+              <Route path="/" element={<Home />} />
+              <Route path="/login" element={<Login />} />
+              <Route path="/register" element={<Register />} />
+              <Route path="/dashboard" element={<Dashboard />} />
+              <Route path="/userhome" element={<UserHome />} />
+              <Route path="/transactions" element={<Transactions />} />
+              <Route path="/insights" element={<Insights />} />
+              <Route path="/profile" element={<Profile />} />
+            </Routes>
+          </FetchProvider>
         </MonthProvider>
       </AuthProvider>
     </Router>

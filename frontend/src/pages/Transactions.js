@@ -2,6 +2,7 @@ import { useEffect, useState, useContext, Fragment } from "react";
 import React from "react";
 import axios from "axios";
 import AuthContext from "../context/AuthContext";
+import FetchContext from "../context/FetchContext";
 import Header from "../components/Header";
 import {
   BarChart,
@@ -18,28 +19,6 @@ import {
 import MonthContext from "../context/MonthContext";
 import "../index.css";
 
-const CURRENCY_SYMBOLS = {
-  USD: "$",
-  EUR: "€",
-  GBP: "£",
-  BGN: "лв",
-  CZK: "Kč",
-  DKK: "kr",
-  HUF: "Ft",
-  ISK: "kr",
-  NOK: "kr",
-  PLN: "zł",
-  RON: "lei",
-  SEK: "kr",
-  CHF: "CHF",
-  JPY: "¥",
-  CAD: "C$",
-  AUD: "A$",
-  NZD: "NZ$",
-  SGD: "S$",
-  HKD: "HK$",
-};
-
 const getCategoryColor = (cat) => {
   if (cat === "expense") return "#78281f";
   else if (cat === "income") return "#196f3d";
@@ -47,21 +26,19 @@ const getCategoryColor = (cat) => {
 };
 
 const Transactions = () => {
-  const { user } = useContext(AuthContext);
+  const { user, CURRENCY_SYMBOLS } = useContext(AuthContext);
+  const { fetchSummary, summary } = useContext(FetchContext);
   const [transactions, setTransactions] = useState([]);
   const [investments, setInvest] = useState([]);
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
-  const { selectedMonth, setSelectedMonth } = useContext(MonthContext);
+  const { selectedMonth, setSelectedMonth, handleNextMonth, handlePrevMonth } =
+    useContext(MonthContext);
   const [error, setError] = useState(null);
   const [originalTransaction, setOriginalTransaction] = useState(null);
 
   const [showForm, setShowForm] = useState(false);
-  const [summary, setSummary] = useState({
-    total_expense: 0,
-    total_income: 0,
-    total_investment: 0,
-  });
+
   const [newTransaction, setNewTransaction] = useState({
     subcategory: "",
     amount: "",
@@ -95,7 +72,6 @@ const Transactions = () => {
           { headers }
         );
 
-        // Filter out investments from normal transactions.
         const userTransactions = transactionsResponse.data.filter(
           (t) => t.user === user.user_id && t.category !== "savings_investment"
         );
@@ -118,19 +94,6 @@ const Transactions = () => {
         setError("Failed to load user data.");
       } finally {
         setLoading(false);
-      }
-    };
-
-    const fetchSummary = async () => {
-      const [year, month] = selectedMonth.split("-");
-      try {
-        const response = await axios.get(
-          `http://127.0.0.1:8000/api/monthly-summary/${year}/${month}/`,
-          { headers }
-        );
-        setSummary(response.data);
-      } catch (err) {
-        console.error("Error fetching monthly summary:", err);
       }
     };
 
@@ -281,26 +244,6 @@ const Transactions = () => {
         err.response?.data || err.message
       );
     }
-  };
-
-  const formatMonth = (date) => {
-    const year = date.getFullYear();
-    const month = (date.getMonth() + 1).toString().padStart(2, "0");
-    return `${year}-${month}`;
-  };
-
-  const handlePrevMonth = () => {
-    const [year, month] = selectedMonth.split("-");
-    const currentDate = new Date(parseInt(year), parseInt(month) - 1);
-    currentDate.setMonth(currentDate.getMonth() - 1);
-    setSelectedMonth(formatMonth(currentDate));
-  };
-
-  const handleNextMonth = () => {
-    const [year, month] = selectedMonth.split("-");
-    const currentDate = new Date(parseInt(year), parseInt(month) - 1);
-    currentDate.setMonth(currentDate.getMonth() + 1);
-    setSelectedMonth(formatMonth(currentDate));
   };
 
   if (loading) return <p>Loading transactions...</p>;

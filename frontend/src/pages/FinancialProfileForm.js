@@ -5,6 +5,8 @@ import { refreshAccessToken } from "../utils/auth";
 
 const FinancialProfileForm = ({ onSuccess }) => {
   const [formData, setFormData] = useState({
+    last_name: "",
+    first_name: "",
     currency: "",
     country: "",
     monthly_income: "",
@@ -125,6 +127,23 @@ const FinancialProfileForm = ({ onSuccess }) => {
   return (
     <form onSubmit={handleSubmit} className="profile-form">
       <h3>Complete Your Financial Profile</h3>
+      <label>Last name</label>
+      <input
+        type="text"
+        name="last_name"
+        onChange={handleChange}
+        required
+        maxLength="50"
+      />
+
+      <label>First name</label>
+      <input
+        type="text"
+        name="first_name"
+        onChange={handleChange}
+        required
+        maxLength="50"
+      />
 
       <label>What is your preferred default currency?</label>
       <select name="currency" onChange={handleChange} required>

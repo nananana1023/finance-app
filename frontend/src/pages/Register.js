@@ -98,7 +98,7 @@ const Register = () => {
       setEmailError("");
     }
 
-    // Send request to Django to validate the email
+    // request to validate email
     try {
       const response = await axios.post(
         "http://127.0.0.1:8000/auth/validate-email/",
@@ -106,7 +106,7 @@ const Register = () => {
       );
 
       if (response.data.valid === false) {
-        setEmailError(response.data.message); // Set Django's exact message
+        setEmailError(response.data.message); // django message
       } else {
         setEmailError("");
       }

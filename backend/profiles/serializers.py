@@ -9,6 +9,31 @@ class UserFinancialProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model = UserFinancialProfile
         exclude = ['user']  
+    
+    def validate(self, data):
+        instance = self.instance  
+
+        income = data.get('monthly_income', instance.monthly_income if instance else None)
+        goal = data.get('monthly_spending_goal', instance.monthly_spending_goal if instance else None)
+        percent = data.get('savings_percent', instance.savings_percent if instance else None)
+
+        if income is None or goal is None or percent is None:
+            return data
+
+        try:
+            saveAmount = (int(percent[:2]) / 100) * income
+        except Exception:
+            raise serializers.ValidationError("Invalid savings percent format.")
+
+        if goal > income:
+            raise serializers.ValidationError("Monthly spending goal can't be more than the income.")
+
+        if saveAmount > (income - goal):
+            raise serializers.ValidationError("Savings cannot exceed income minus spending goal.")
+
+        return data
+
+
 
 class TransactionSerializer(serializers.ModelSerializer):
     class Meta:

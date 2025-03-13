@@ -12,6 +12,8 @@ class UserFinancialProfile(models.Model):
     country = models.CharField(max_length=100)
     monthly_income = models.FloatField(validators=[validate_positive])
     monthly_spending_goal = models.FloatField(validators=[validate_positive])
+    first_name = models.CharField(max_length=50, blank=True, default="Not provided")
+    last_name = models.CharField(max_length=50, blank=True, default="Not provided")
 
     SAVINGS_PERCENT_CHOICES = [
         ("10%", "10%"),

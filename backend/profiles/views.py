@@ -8,6 +8,8 @@ from rest_framework.decorators import api_view, permission_classes, action
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 import calendar
+from rest_framework import status
+
 
 #viewset - Group several related actions in one class (CRUD)
 class UserFinancialProfileViewSet(viewsets.ModelViewSet):
@@ -18,18 +20,28 @@ class UserFinancialProfileViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         return self.queryset.filter(user=self.request.user)
 
-    def perform_create(self, serializer):
-        if not self.request.user or self.request.user.is_anonymous:
-            raise Exception("User is not authenticated.")
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        if not serializer.is_valid():
+            # Return serializer errors (with your custom messages) as JSON
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        self.perform_create(serializer)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
 
-        try:
-            serializer.save(user=self.request.user)
-        except Exception as e:
-            print("ERROR during profile creation:", str(e)) 
-            raise
-        
+    def perform_create(self, serializer):
+        serializer.save(user=self.request.user)
+
+    def update(self, request, *args, **kwargs):
+        partial = kwargs.pop("partial", False)
+        instance = self.get_object()
+        serializer = self.get_serializer(instance, data=request.data, partial=partial)
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        self.perform_update(serializer)
+        return Response(serializer.data)
+
     def perform_update(self, serializer):
-        serializer.save(user=self.request.user) 
+        serializer.save(user=self.request.user)
       
 class TransactionViewSet(viewsets.ModelViewSet):
     serializer_class = TransactionSerializer
