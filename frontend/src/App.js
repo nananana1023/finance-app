@@ -8,6 +8,8 @@ import UserHome from "./pages/UserHome";
 import Transactions from "./pages/Transactions";
 import Insights from "./pages/Insights";
 import Profile from "./pages/Profile";
+import ChangePassword from "./pages/ChangePassword";
+import ChangeUsername from "./pages/ChangeUsername";
 import { MonthProvider } from "./context/MonthContext";
 import { FetchProvider } from "./context/FetchContext";
 
@@ -26,6 +28,8 @@ function App() {
               <Route path="/transactions" element={<Transactions />} />
               <Route path="/insights" element={<Insights />} />
               <Route path="/profile" element={<Profile />} />
+              <Route path="/change-password" element={<ChangePassword />} />
+              <Route path="/change-username" element={<ChangeUsername />} />
             </Routes>
           </FetchProvider>
         </MonthProvider>

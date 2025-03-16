@@ -3,6 +3,7 @@ import Header from "../components/Header";
 import AuthContext from "../context/AuthContext";
 import { useEffect, useState, useContext } from "react";
 import axios from "axios";
+import { useLocation } from "react-router-dom";
 
 const Profile = () => {
   const { CURRENCY_SYMBOLS, user, logoutUser } = useContext(AuthContext);
@@ -17,6 +18,9 @@ const Profile = () => {
     monthly_income: "",
     monthly_spending_goal: "",
   });
+  // Set default active menu to null
+  const [activeMenu, setActiveMenu] = useState(null);
+  const location = useLocation();
 
   const token = localStorage.getItem("accessToken");
   const headers = { Authorization: `Bearer ${token}` };
@@ -54,6 +58,16 @@ const Profile = () => {
 
     fetchProfileData();
   }, [user]);
+
+  useEffect(() => {
+    if (location.state && location.state.successMessage) {
+      setSuccessMessage(location.state.successMessage);
+      const timer = setTimeout(() => {
+        setSuccessMessage("");
+      }, 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [location.state]);
 
   const handleEdit = () => {
     setUpdatedProfile({
@@ -97,7 +111,7 @@ const Profile = () => {
       setProfile(response.data);
       setIsEditing(false);
       setSuccessMessage("Your financial profile is updated successfully!");
-      setFormError(""); // Clear any form errors on success
+      setFormError("");
       setTimeout(() => {
         setSuccessMessage("");
       }, 5000);
@@ -109,7 +123,6 @@ const Profile = () => {
           Array.isArray(error.response.data.non_field_errors)
             ? error.response.data.non_field_errors.join(", ")
             : "An error occurred.";
-        // Set the error message for the form instead of the global error state
         setFormError(errorMsg);
       } else {
         console.error("Error updating profile.", error);
@@ -119,7 +132,7 @@ const Profile = () => {
   };
 
   if (loading) return <p>Loading...</p>;
-  if (error) return <p style={{ color: "red" }}> {error}</p>;
+  if (error) return <p style={{ color: "red" }}>{error}</p>;
 
   return (
     <div>
@@ -139,25 +152,54 @@ const Profile = () => {
         </p>
       )}
 
-      {error && (
-        <p
+      {/* Menu Section */}
+      <div className="profile-menu" style={{ marginBottom: "20px" }}>
+        <button
+          onClick={() => setActiveMenu("user")}
           style={{
-            color: "red",
-            background: "#d4edda",
-            padding: "10px",
-            borderRadius: "5px",
+            fontWeight: activeMenu === "user" ? "bold" : "normal",
+            marginRight: "10px",
           }}
         >
-          {error}
-        </p>
+          User Profile
+        </button>
+        <button
+          onClick={() => setActiveMenu("financial")}
+          style={{ fontWeight: activeMenu === "financial" ? "bold" : "normal" }}
+        >
+          Financial Profile
+        </button>
+      </div>
+      {activeMenu === "user" && (
+        <div className="user-profile">
+          <h3>User Profile Details</h3>
+          <p>
+            <strong>Username:</strong> {user ? user.username : "N/A"}
+          </p>
+          <p>
+            <strong>Country:</strong> {profile ? profile.country : "N/A"}
+          </p>
+          <p>
+            <strong>Default Currency:</strong>{" "}
+            {profile
+              ? CURRENCY_SYMBOLS[profile.currency] || profile.currency
+              : "N/A"}
+          </p>
+          <button onClick={() => navigate("/change-password")}>
+            Change Password
+          </button>
+          <button onClick={() => navigate("/change-username")}>
+            Edit Username
+          </button>
+        </div>
       )}
 
-      {profile ? (
-        <div>
+      {activeMenu === "financial" && (
+        <div className="financial-profile">
+          <h3>Financial Profile Details</h3>
           {isEditing ? (
             <div>
               {formError && <p style={{ color: "red" }}>{formError}</p>}
-
               <label>
                 Monthly Income:
                 <div style={{ display: "flex", alignItems: "center" }}>
@@ -172,7 +214,6 @@ const Profile = () => {
                   </span>
                 </div>
               </label>
-
               <label>
                 Monthly Spending Goal:
                 <div style={{ display: "flex", alignItems: "center" }}>
@@ -187,7 +228,6 @@ const Profile = () => {
                   </span>
                 </div>
               </label>
-
               <label>
                 Savings percentage:
                 <select
@@ -204,7 +244,6 @@ const Profile = () => {
                   ))}
                 </select>
               </label>
-
               <button onClick={handleSave}>Save</button>
               <button onClick={() => setIsEditing(false)}>Cancel</button>
             </div>
@@ -226,8 +265,6 @@ const Profile = () => {
             </div>
           )}
         </div>
-      ) : (
-        <p>Loading profile...</p>
       )}
 
       <button className="logout-button" onClick={handleLogout}>

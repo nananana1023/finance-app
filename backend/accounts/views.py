@@ -1,8 +1,7 @@
 from django.contrib.auth import get_user_model
 from rest_framework.response import Response
-from rest_framework import generics, permissions
+from rest_framework import generics, permissions, status
 from rest_framework.decorators import api_view
-from .serializers import RegisterSerializer
 from django.core.validators import validate_email
 from django.core.exceptions import ValidationError
 import random
@@ -14,6 +13,7 @@ from rest_framework.decorators import api_view, permission_classes
 from django.http import JsonResponse
 from rest_framework.permissions import AllowAny
 from rest_framework.decorators import permission_classes
+from .serializers import ChangePasswordSerializer
 
 
 User = get_user_model()
@@ -139,9 +139,76 @@ class LoginView(generics.GenericAPIView):
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])  
 def get_user_details(request):
+
     user = request.user
     return JsonResponse({
         "id": user.id,
         "username": user.username,
         "email": user.email
     })
+    
+class ChangePasswordView(generics.UpdateAPIView):
+    serializer_class = ChangePasswordSerializer
+    permission_classes = (permissions.IsAuthenticated,)
+
+    def get_object(self, queryset=None):
+        #current authenticated user
+        return self.request.user
+
+    def update(self, request, *args, **kwargs):
+        user = self.get_object()
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        
+        #verify old password
+        if not user.check_password(serializer.validated_data.get("old_password")):
+            return Response({"old_password": "Wrong password."}, status=status.HTTP_400_BAD_REQUEST)
+        
+        #save new password
+        user.set_password(serializer.validated_data.get("new_password"))
+        user.save()
+        return Response({"detail": "Password updated successfully"}, status=status.HTTP_200_OK)
+    
+class ChangeUsernameView(generics.UpdateAPIView):
+    permission_classes = (permissions.IsAuthenticated,)
+
+    def get_object(self, queryset=None):
+        return self.request.user
+
+    def update(self, request, *args, **kwargs):
+        user = self.get_object()
+        old_password = request.data.get("old_password")
+        new_username = request.data.get("new_username")
+        
+        if not old_password or not new_username:
+            return Response(
+                {"detail": "Both fields are required."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        if len(new_username) < 3:
+            return Response(
+                {"detail": "Username must be at least 3 characters long."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        if not user.check_password(old_password):
+            return Response(
+                {"detail": "Wrong password."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        # new username is already registered (exclude the user itself)
+        if User.objects.filter(username=new_username).exclude(pk=user.pk).exists():
+            return Response(
+                {"detail": "Username is already taken."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        user.username = new_username
+        user.save()
+        
+        return Response(
+            {"detail": "Username updated successfully"},
+            status=status.HTTP_200_OK
+        )
