@@ -1,5 +1,4 @@
 import React, { useState, useContext } from "react";
-import MonthContext from "../context/MonthContext";
 import AuthContext from "../context/AuthContext";
 
 const getCategoryColor = (cat) => {
@@ -219,7 +218,7 @@ const PaginatedTable = ({
                 <option value="">All</option>
                 <option value="income">Income</option>
                 <option value="expense">Expense</option>
-                <option value="savings">Savings</option>
+                <option value="savings_investment">Savings/Investment</option>
               </select>
               <select
                 value={filters.subcategory}

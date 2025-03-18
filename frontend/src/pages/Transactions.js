@@ -34,6 +34,10 @@ const Transactions = () => {
   const [originalTransaction, setOriginalTransaction] = useState(null);
   const currentMonthStr = new Date().toISOString().slice(0, 7);
   const [showForm, setShowForm] = useState(false);
+  const [selectedCurrency, setSelectedCurrency] = useState(profile?.currency);
+  const [convertedAmount, setConvertedAmount] = useState(null);
+  const [showCustomRateField, setShowCustomRateField] = useState(false);
+  const [customExchangeRate, setCustomExchangeRate] = useState("");
 
   const [newTransaction, setNewTransaction] = useState({
     subcategory: "",
@@ -111,8 +115,6 @@ const Transactions = () => {
     return groups;
   }, {});
 
-  console.log(groupedTransactions);
-
   const groupedAllTransactions = allTransUser.reduce((groups, transaction) => {
     const date = transaction.date;
     if (!groups[date]) {
@@ -138,7 +140,7 @@ const Transactions = () => {
         {
           user: user.user_id,
           subcategory: newTransaction.subcategory,
-          amount: newTransaction.amount,
+          amount: convertedAmount || newTransaction.amount,
           note: newTransaction.note,
           date: newTransaction.date,
           recurring: newTransaction.recurring,
@@ -264,6 +266,60 @@ const Transactions = () => {
 
   if (loading) return <p>Loading transactions...</p>;
   if (error) return <p style={{ color: "red" }}>{error}</p>;
+
+  const convertAmount = async (sourceCurrency, amount) => {
+    // If custom rate is enabled and provided, use it.
+    if (showCustomRateField && customExchangeRate) {
+      const converted = amount * Number(customExchangeRate);
+      setConvertedAmount(Number(converted.toFixed(2)));
+      return;
+    }
+    // Otherwise, fetch rates from the API.
+    try {
+      const response = await fetch(
+        `https://openexchangerates.org/api/latest.json?app_id=9ffddd5f54f046a0870f20c1633b320b`
+      );
+      const data = await response.json();
+      if (data && data.rates) {
+        const rates = data.rates;
+        const rateSource = rates[sourceCurrency];
+        const rateTarget = rates[profile?.currency];
+        if (rateTarget && rateSource) {
+          const converted = amount * (rateTarget / rateSource);
+          setConvertedAmount(Number(converted.toFixed(2)));
+        }
+      }
+    } catch (error) {
+      console.error("Error converting amount:", error);
+    }
+  };
+
+  const handleCustomRateChange = (e) => {
+    const rate = e.target.value;
+    setCustomExchangeRate(rate);
+    if (newTransaction.amount) {
+      const converted = newTransaction.amount * Number(rate);
+      setConvertedAmount(Number(converted.toFixed(2)));
+    }
+  };
+
+  const handleAmountChange = (e) => {
+    const value = e.target.value;
+    setNewTransaction((prev) => ({ ...prev, amount: value }));
+    if (value) {
+      convertAmount(selectedCurrency, value);
+    } else {
+      setConvertedAmount(null);
+    }
+  };
+
+  const handleCurrencyChange = (e) => {
+    const currency = e.target.value;
+    setSelectedCurrency(currency);
+    if (newTransaction.amount) {
+      convertAmount(currency, newTransaction.amount);
+    }
+  };
 
   const spendingData =
     profile && profile.monthly_spending_goal
@@ -541,93 +597,197 @@ const Transactions = () => {
       )}
 
       {/* Add transaction */}
-      <button onClick={() => setShowForm(!showForm)}>+</button>
-      {showForm && (
-        <form onSubmit={handleAddTransaction}>
-          <label>
-            Category:
-            <select
-              name="subcategory"
-              value={newTransaction.subcategory}
-              onChange={handleInputChange}
-              required
-            >
-              <option value="">Select Category</option>
-              <optgroup label="Income">
-                <option value="salary">Salary</option>
-                <option value="allowance">Allowance</option>
-                <option value="investment_gain">Investment Gain</option>
-                <option value="stipend">Stipend</option>
-                <option value="sale_proceeds">Sale Proceeds</option>
-                <option value="dividend">Dividend</option>
-                <option value="other">Other</option>
-              </optgroup>
-              <optgroup label="Expense">
-                <option value="grocery">Grocery</option>
-                <option value="restaurant">Restaurant</option>
-                <option value="entertainment">Entertainment</option>
-                <option value="healthcare">Healthcare</option>
-                <option value="utility">Utility</option>
-                <option value="subscription">Subscription</option>
-                <option value="gift">Gift</option>
-                <option value="self_care">Self Care</option>
-                <option value="housing">Housing</option>
-                <option value="clothes">Clothes</option>
-                <option value="miscellaneous">Miscellaneous</option>
-              </optgroup>
-              <optgroup label="Savings & Investment">
-                <option value="stock">Stock</option>
-                <option value="bond">Bond</option>
-                <option value="crypto">Crypto</option>
-                <option value="fund">Fund</option>
-                <option value="real_estate">Real Estate</option>
-                <option value="savings">Savings</option>
-              </optgroup>
-            </select>
-          </label>
-          <label>
-            Amount:{" "}
-            <input
-              type="number"
-              name="amount"
-              value={newTransaction.amount}
-              onChange={handleInputChange}
-              required
-            />
-          </label>
-          <label>
-            Note:{" "}
-            <input
-              type="text"
-              name="note"
-              value={newTransaction.note}
-              onChange={handleInputChange}
-            />
-          </label>
-          <label>
-            Date:{" "}
-            <input
-              type="date"
-              name="date"
-              value={newTransaction.date}
-              onChange={handleInputChange}
-              required
-            />
-          </label>
-          <label className="switch">
-            Recurring Transaction:
-            <input
-              type="checkbox"
-              name="recurring"
-              checked={newTransaction.recurring}
-              onChange={handleInputChange}
-            />
-            <span className="slider round"></span>
-          </label>
+      <div style={{ marginBottom: "100px" }}>
+        <button
+          onClick={() =>
+            setShowForm((prev) => {
+              const newShow = !prev;
+              if (newShow) {
+                // Reset currency to default and clear converted amount when form is shown.
+                setSelectedCurrency(profile?.currency);
+                setConvertedAmount(null);
+                setShowCustomRateField(false);
+                setCustomExchangeRate("");
+              }
+              return newShow;
+            })
+          }
+        >
+          +
+        </button>
+        {showForm && (
+          <form onSubmit={handleAddTransaction}>
+            <label>
+              Category:
+              <select
+                name="subcategory"
+                value={newTransaction.subcategory}
+                onChange={handleInputChange}
+                required
+              >
+                <option value="">Select Category</option>
+                <optgroup label="Income">
+                  <option value="salary">Salary</option>
+                  <option value="allowance">Allowance</option>
+                  <option value="investment_gain">Investment Gain</option>
+                  <option value="stipend">Stipend</option>
+                  <option value="sale_proceeds">Sale Proceeds</option>
+                  <option value="dividend">Dividend</option>
+                  <option value="other">Other</option>
+                </optgroup>
+                <optgroup label="Expense">
+                  <option value="grocery">Grocery</option>
+                  <option value="restaurant">Restaurant</option>
+                  <option value="entertainment">Entertainment</option>
+                  <option value="healthcare">Healthcare</option>
+                  <option value="utility">Utility</option>
+                  <option value="subscription">Subscription</option>
+                  <option value="gift">Gift</option>
+                  <option value="self_care">Self Care</option>
+                  <option value="housing">Housing</option>
+                  <option value="clothes">Clothes</option>
+                  <option value="miscellaneous">Miscellaneous</option>
+                </optgroup>
+                <optgroup label="Savings & Investment">
+                  <option value="stock">Stock</option>
+                  <option value="bond">Bond</option>
+                  <option value="crypto">Crypto</option>
+                  <option value="fund">Fund</option>
+                  <option value="real_estate">Real Estate</option>
+                  <option value="savings">Savings</option>
+                </optgroup>
+              </select>
+            </label>
 
-          <button type="submit">Add Transaction</button>
-        </form>
-      )}
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                marginTop: "10px",
+              }}
+            >
+              <label>
+                Amount:{" "}
+                <input
+                  type="number"
+                  name="amount"
+                  value={newTransaction.amount}
+                  onChange={handleAmountChange}
+                  required
+                />
+              </label>
+              <label style={{ marginLeft: "10px" }}>
+                Currency:
+                <select
+                  name="currency"
+                  value={selectedCurrency}
+                  onChange={handleCurrencyChange}
+                >
+                  {profile && profile.currency ? (
+                    <>
+                      <option key={profile.currency} value={profile.currency}>
+                        {profile.currency}
+                      </option>
+                      {Object.entries(CURRENCY_SYMBOLS)
+                        .filter(([code]) => code !== profile.currency)
+                        .map(([code]) => (
+                          <option key={code} value={code}>
+                            {code}
+                          </option>
+                        ))}
+                    </>
+                  ) : (
+                    Object.entries(CURRENCY_SYMBOLS).map(([code]) => (
+                      <option key={code} value={code}>
+                        {code}
+                      </option>
+                    ))
+                  )}
+                </select>
+              </label>
+            </div>
+
+            {/* Button to toggle custom exchange rate */}
+            <div style={{ marginTop: "10px" }}>
+              <button
+                type="button"
+                onClick={() => {
+                  setShowCustomRateField(!showCustomRateField);
+                  // Clear custom rate if removing the custom field.
+                  if (showCustomRateField) {
+                    setCustomExchangeRate("");
+                    if (newTransaction.amount) {
+                      convertAmount(selectedCurrency, newTransaction.amount);
+                    }
+                  }
+                }}
+              >
+                {showCustomRateField
+                  ? "Remove Custom Rate"
+                  : "Set Custom Exchange Rate"}
+              </button>
+            </div>
+
+            {/* Custom exchange rate input field */}
+            {showCustomRateField && (
+              <div style={{ marginTop: "10px" }}>
+                <label>
+                  Custom Exchange Rate:
+                  <input
+                    type="number"
+                    step="0.01"
+                    value={customExchangeRate}
+                    onChange={handleCustomRateChange}
+                  />
+                </label>
+              </div>
+            )}
+
+            {/* Only show the converted amount if a conversion has been done and the currency differs */}
+            {convertedAmount !== null &&
+              selectedCurrency !== profile?.currency && (
+                <div style={{ marginTop: "10px" }}>
+                  <p>
+                    Converted Amount: {convertedAmount.toFixed(2)}{" "}
+                    {profile?.currency}
+                  </p>
+                </div>
+              )}
+
+            <label>
+              Note:{" "}
+              <input
+                type="text"
+                name="note"
+                value={newTransaction.note}
+                onChange={handleInputChange}
+              />
+            </label>
+            <label>
+              Date:{" "}
+              <input
+                type="date"
+                name="date"
+                value={newTransaction.date}
+                onChange={handleInputChange}
+                required
+              />
+            </label>
+            <label className="switch">
+              Recurring Transaction:
+              <input
+                type="checkbox"
+                name="recurring"
+                checked={newTransaction.recurring}
+                onChange={handleInputChange}
+              />
+              <span className="slider round"></span>
+            </label>
+
+            <button type="submit">Add Transaction</button>
+          </form>
+        )}
+      </div>
     </div>
   );
 };
