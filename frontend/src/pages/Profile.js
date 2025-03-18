@@ -18,7 +18,6 @@ const Profile = () => {
     monthly_income: "",
     monthly_spending_goal: "",
   });
-  // Set default active menu to null
   const [activeMenu, setActiveMenu] = useState(null);
   const location = useLocation();
 
@@ -180,10 +179,7 @@ const Profile = () => {
             <strong>Country:</strong> {profile ? profile.country : "N/A"}
           </p>
           <p>
-            <strong>Default Currency:</strong>{" "}
-            {profile
-              ? CURRENCY_SYMBOLS[profile.currency] || profile.currency
-              : "N/A"}
+            <strong>Default Currency:</strong> {profile?.currency}
           </p>
           <button onClick={() => navigate("/change-password")}>
             Change Password

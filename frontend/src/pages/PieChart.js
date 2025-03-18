@@ -2,14 +2,16 @@ import React, { useState } from "react";
 import { PieChart, Pie, Tooltip, Legend, Cell } from "recharts";
 
 const COLORS = [
-  "#0088FE",
-  "#00C49F",
-  "#FFBB28",
-  "#FF8042",
-  "#AB47BC",
-  "#FFA726",
-  "#26C6DA",
-  "#66BB6A",
+  "#9BBFE0",
+  "#E8A09A",
+  "#FBE29F",
+  "#C6D68F",
+  "#F66D44",
+  "#FEAE65",
+  "#E6F69D",
+  "#AADEA7",
+  "#64C2A6",
+  "#2D87BB",
 ];
 
 function PieChartContainer({ data }) {
@@ -39,7 +41,6 @@ function PieChartContainer({ data }) {
         </select>
       </div>
 
-      {/* Pie Chart */}
       <PieChart width={400} height={400}>
         <Pie
           data={filteredData}
@@ -48,14 +49,28 @@ function PieChartContainer({ data }) {
           cx="50%"
           cy="50%"
           outerRadius={120}
-          label
         >
           {filteredData.map((entry, index) => (
             <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
           ))}
         </Pie>
         <Tooltip />
-        <Legend />
+        <Legend
+          layout="vertical"
+          verticalAlign="middle"
+          align="right"
+          wrapperStyle={{
+            position: "absolute",
+            top: "50%",
+            left: "420px",
+            transform: "translateY(-50%)",
+            width: "150px",
+          }}
+          formatter={(value, entry) => {
+            const { total_amount } = entry.payload;
+            return `${value}: ${total_amount}`;
+          }}
+        />
       </PieChart>
     </div>
   );

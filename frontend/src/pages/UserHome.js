@@ -55,9 +55,9 @@ const UserHome = () => {
   }, [user, selectedMonth]);
 
   const data = [
-    { category: "Expense", amount: summary.total_expense, color: "#ec7063" },
-    { category: "Income", amount: summary.total_income, color: "#17a589" },
-    { category: "Savings", amount: summary.total_investment, color: "#5dade2" },
+    { category: "Expense", amount: summary.total_expense, color: "#FF6961" },
+    { category: "Income", amount: summary.total_income, color: "#77DD77" },
+    { category: "Savings", amount: summary.total_investment, color: "#6CA0DC" },
   ];
 
   const CustomXAxisTick = ({ x, y, payload, data }) => {
@@ -66,12 +66,11 @@ const UserHome = () => {
 
     return (
       <g transform={`translate(${x},${y})`}>
-        {/* Always show month */}
         <text x={0} y={0} dy={16} textAnchor="middle" fill="#666">
           {value}
         </text>
 
-        {/* Only show year below january */}
+        {/* show year below january */}
         {value === "January" && (
           <text x={0} y={0} dy={32} textAnchor="middle" fill="#666">
             {currentDataItem?.year}
@@ -90,8 +89,8 @@ const UserHome = () => {
 
       {/* line chart - expenses over months */}
 
-      <div>
-        <h2>Total expense </h2>
+      <div style={{ marginLeft: 70 }}>
+        <h3>Total Spent</h3>
         <ResponsiveContainer width="80%" height={400}>
           <LineChart
             data={total_expenses}
@@ -100,16 +99,17 @@ const UserHome = () => {
             <XAxis
               dataKey="month_name"
               padding={{ left: 50, right: 50 }}
-              tick={<CustomXAxisTick data={total_expenses} />}
+              tick={<CustomXAxisTick data={total_expenses} fill="#6CA0DC" />}
+              stroke="grey"
             />
             <YAxis hide />
             <ReferenceLine
               y={profile?.monthly_spending_goal}
-              stroke="red"
+              stroke="#FF6961"
               label={({ viewBox }) => {
                 const { x, y } = viewBox;
                 return (
-                  <text x={x} y={y - 10} textAnchor="middle" fill="red">
+                  <text x={x} y={y - 10} textAnchor="middle" fill="#FF6961">
                     {profile?.monthly_spending_goal}
                     {CURRENCY_SYMBOLS[profile?.currency] || profile?.currency}
                   </text>
@@ -120,7 +120,7 @@ const UserHome = () => {
             <Line
               type="linear"
               dataKey="amount"
-              stroke="#8884d8"
+              stroke="#6CA0DC"
               activeDot={{ r: 8 }}
             >
               <LabelList
@@ -155,12 +155,14 @@ const UserHome = () => {
           display: "flex",
           justifyContent: "space-around",
           alignItems: "flex-start",
+          marginLeft: 70,
         }}
       >
-        {/* Bar Chart Container */}
+        {/* Bar */}
         <div style={{ width: "50%" }}>
+          <h3>Cashflow</h3>
           {!isDataEmpty ? (
-            <ResponsiveContainer width="100%" height={400}>
+            <ResponsiveContainer width="80%" height={400}>
               <BarChart
                 data={data}
                 margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
@@ -188,9 +190,12 @@ const UserHome = () => {
           )}
         </div>
 
-        {/* Pie Chart Container */}
+        {/* Pie */}
         <div style={{ width: "50%" }}>
-          <PieChartContainer data={pieData} />
+          <h3>Transactions by Categories</h3>
+          <div>
+            <PieChartContainer data={pieData} />
+          </div>
         </div>
       </div>
     </div>

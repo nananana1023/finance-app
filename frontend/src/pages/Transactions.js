@@ -18,25 +18,21 @@ import {
 } from "recharts";
 import MonthContext from "../context/MonthContext";
 import "../index.css";
-
-const getCategoryColor = (cat) => {
-  if (cat === "expense") return "#78281f";
-  else if (cat === "income") return "#196f3d";
-  else return "#2e4053";
-};
+import PaginatedTable from "./PaginatedTable";
 
 const Transactions = () => {
   const { user, CURRENCY_SYMBOLS } = useContext(AuthContext);
   const { fetchSummary, summary } = useContext(FetchContext);
   const [transactions, setTransactions] = useState([]);
-  const [investments, setInvest] = useState([]);
+  const [allTransUser, setAllTransactions] = useState([]);
+  const [successMessage, setSuccessMessage] = useState("");
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
   const { selectedMonth, setSelectedMonth, handleNextMonth, handlePrevMonth } =
     useContext(MonthContext);
   const [error, setError] = useState(null);
   const [originalTransaction, setOriginalTransaction] = useState(null);
-
+  const currentMonthStr = new Date().toISOString().slice(0, 7);
   const [showForm, setShowForm] = useState(false);
 
   const [newTransaction, setNewTransaction] = useState({
@@ -71,16 +67,21 @@ const Transactions = () => {
           `http://127.0.0.1:8000/api/transactions/by-month/${year}/${month}/`,
           { headers }
         );
+        const allTrans = await axios.get(
+          `http://127.0.0.1:8000/api/transactions/`,
+          { headers }
+        );
 
         const userTransactions = transactionsResponse.data.filter(
-          (t) => t.user === user.user_id && t.category !== "savings_investment"
+          (t) => t.user === user.user_id
         );
-        const userInvestment = transactionsResponse.data.filter(
-          (t) => t.user === user.user_id && t.category === "savings_investment"
+
+        const userAllTrans = allTrans.data.filter(
+          (t) => t.user === user.user_id
         );
 
         setTransactions(userTransactions);
-        setInvest(userInvestment);
+        setAllTransactions(userAllTrans);
 
         const userProfile = profileResponse.data.find(
           (p) => p.user === user.user_id
@@ -110,12 +111,14 @@ const Transactions = () => {
     return groups;
   }, {});
 
-  const groupedInvestments = investments.reduce((groups, t) => {
-    const date = t.date;
+  console.log(groupedTransactions);
+
+  const groupedAllTransactions = allTransUser.reduce((groups, transaction) => {
+    const date = transaction.date;
     if (!groups[date]) {
       groups[date] = [];
     }
-    groups[date].push(t);
+    groups[date].push(transaction);
     return groups;
   }, {});
 
@@ -150,9 +153,13 @@ const Transactions = () => {
         let day = new Date(newTransaction.date).getDate();
         if (day > 28) day = 28;
 
-        window.alert(
+        setSuccessMessage(
           `This transaction will be automatically deducted every month on day ${day}.`
         );
+
+        setTimeout(() => {
+          setSuccessMessage("");
+        }, 5000);
       }
 
       setNewTransaction({
@@ -199,17 +206,23 @@ const Transactions = () => {
 
       //if recurring was on and updated to off
       if (originalTransaction.recurring && !selectedTransaction.recurring) {
-        window.alert(`All future recurring transactions are disabled.`);
+        setSuccessMessage("All future recurring transactions are disabled.");
+
+        setTimeout(() => {
+          setSuccessMessage("");
+        }, 5000);
       }
 
       // if recurring is on
       if (selectedTransaction.recurring) {
         let day = new Date(selectedTransaction.date).getDate();
         if (day > 28) day = 28;
-
-        window.alert(
-          `This transaction will be automatically deducted every month on day ${day}.`
+        setSuccessMessage(
+          `This transaction will be automatically added every month on day ${day}.`
         );
+        setTimeout(() => {
+          setSuccessMessage("");
+        }, 5000);
       }
 
       setOriginalTransaction(null);
@@ -234,7 +247,10 @@ const Transactions = () => {
       );
       // if recurring trans is deleted
       if (selectedTransaction.recurring) {
-        window.alert(`All future recurring transactions are disabled.`);
+        setSuccessMessage("All future recurring transactions are disabled.");
+        setTimeout(() => {
+          setSuccessMessage("");
+        }, 5000);
 
         setSelectedTransaction(null);
       }
@@ -266,6 +282,10 @@ const Transactions = () => {
   return (
     <div>
       <Header />
+      <h3>
+        <strong>Monthly Spending Goal:</strong> {profile?.monthly_spending_goal}
+        {CURRENCY_SYMBOLS[profile.currency] || profile.currency}
+      </h3>
 
       {/* select month  */}
 
@@ -283,11 +303,6 @@ const Transactions = () => {
       {/* Bar with spending goal */}
       {profile && profile.monthly_spending_goal && (
         <div>
-          <h3>
-            <strong>Monthly Spending Goal:</strong>{" "}
-            {profile.monthly_spending_goal}
-            {CURRENCY_SYMBOLS[profile.currency] || profile.currency}
-          </h3>
           {/* overspent case */}
           {summary.total_expense > profile.monthly_spending_goal ? (
             <ResponsiveContainer width="80%" height={100}>
@@ -326,18 +341,7 @@ const Transactions = () => {
                   fill="#FFCCCC"
                   name="Expense"
                   radius={[0, 20, 20, 0]}
-                >
-                  {/* <LabelList
-                    dataKey="Expense"
-                    position="inside"
-                    fill="black"
-                    formatter={(value) =>
-                      `${value}${
-                        CURRENCY_SYMBOLS[profile.currency] || profile.currency
-                      }`
-                    }
-                  /> */}
-                </Bar>
+                ></Bar>
               </BarChart>
             </ResponsiveContainer>
           ) : (
@@ -355,7 +359,6 @@ const Transactions = () => {
                   hide
                 />
                 <YAxis type="category" dataKey="name" hide />
-                {/* <Legend /> */}
                 <Tooltip />
 
                 {spendingData.length && spendingData[0].Expense !== 0 && (
@@ -389,16 +392,6 @@ const Transactions = () => {
                         : "#aed6f1";
                     return <Cell key={`cell-${index}`} fill={fillColor} />;
                   })}
-                  {/* <LabelList
-                    dataKey="remaining"
-                    position="inside"
-                    fill="black"
-                    formatter={(value) =>
-                      `${value}${
-                        CURRENCY_SYMBOLS[profile.currency] || profile.currency
-                      }`
-                    }
-                  /> */}
                 </Bar>
               </BarChart>
             </ResponsiveContainer>
@@ -406,64 +399,49 @@ const Transactions = () => {
         </div>
       )}
 
-      <h3>Your Transactions</h3>
+      {successMessage && (
+        <p
+          style={{
+            color: "green",
+            background: "#d4edda",
+            padding: "10px",
+            borderRadius: "5px",
+          }}
+        >
+          {successMessage}
+        </p>
+      )}
 
       {/* Show transactions */}
-      {Object.keys(groupedTransactions).length === 0 ? (
-        <p>No transactions found.</p>
-      ) : (
-        <table border="1">
-          <thead>
-            <tr>
-              <th width="120">Date</th>
-              <th>Category</th>
-              <th>Note</th>
-              <th>Amount</th>
-            </tr>
-          </thead>
-          <tbody>
-            {Object.keys(groupedTransactions)
-              .sort()
-              .map((date) => (
-                <Fragment key={date}>
-                  <tr
-                    style={{ backgroundColor: "#f0f0f0", fontWeight: "bold" }}
-                  >
-                    <td colSpan="4">{date}</td>
-                  </tr>
-                  {groupedTransactions[date].map((transaction) => (
-                    <tr
-                      key={transaction.id}
-                      onClick={() => handleRowClick(transaction)}
-                      style={{ cursor: "pointer" }}
-                    >
-                      <td></td>
-                      <td
-                        style={{
-                          color: getCategoryColor(transaction.category),
-                        }}
-                      >
-                        {transaction.subcategory.replace("_", " ")}
-                      </td>
-                      <td>{transaction.note || ""}</td>
-                      <td
-                        style={{
-                          color: getCategoryColor(transaction.category),
-                        }}
-                      >
-                        {transaction.category === "expense" ? "-" : "+"}
-                        {transaction.amount % 1 === 0
-                          ? transaction.amount
-                          : Number(transaction.amount).toFixed(2)}{" "}
-                        {profile ? CURRENCY_SYMBOLS[profile.currency] : ""}
-                      </td>
-                    </tr>
-                  ))}
-                </Fragment>
-              ))}
-          </tbody>
-        </table>
-      )}
+      <div style={{ display: "flex", gap: "20px", flexWrap: "wrap" }}>
+        <div style={{ flex: "1" }}>
+          <h3>Your Transactions</h3>
+          {Object.keys(groupedTransactions).length === 0 ? (
+            <p>No transactions found.</p>
+          ) : (
+            <PaginatedTable
+              groupedTransactions={groupedTransactions}
+              handleRowClick={handleRowClick}
+              profile={profile}
+              itemsPerPage={15}
+              type={"trans"}
+            />
+          )}
+        </div>
+
+        {/* recurring trans this month*/}
+        {selectedMonth === currentMonthStr && (
+          <div style={{ flex: "1" }}>
+            <PaginatedTable
+              groupedTransactions={groupedAllTransactions}
+              handleRowClick={handleRowClick}
+              profile={profile}
+              itemsPerPage={10}
+              type={"recur"}
+            />
+          </div>
+        )}
+      </div>
 
       {/* Edit transaction */}
       {selectedTransaction && (
@@ -650,62 +628,6 @@ const Transactions = () => {
           <button type="submit">Add Transaction</button>
         </form>
       )}
-
-      {/* Show investment history */}
-      <div>
-        {Object.keys(groupedInvestments).length === 0 ? (
-          <p></p>
-        ) : (
-          <>
-            <h2>Your investment history</h2>
-            <table border="1">
-              <thead>
-                <tr>
-                  <th width="120">Date</th>
-                  <th>Category</th>
-                  <th>Note</th>
-                  <th>Amount</th>
-                </tr>
-              </thead>
-              <tbody>
-                {Object.keys(groupedInvestments)
-                  .sort()
-                  .map((date) => (
-                    <React.Fragment key={date}>
-                      <tr
-                        style={{
-                          backgroundColor: "#f0f0f0",
-                          fontWeight: "bold",
-                        }}
-                      >
-                        <td colSpan="4">{date}</td>
-                      </tr>
-                      {groupedInvestments[date].map((t) => (
-                        <tr
-                          key={t.id}
-                          onClick={() => handleRowClick(t)}
-                          style={{ cursor: "pointer" }}
-                        >
-                          <td></td>
-                          <td style={{ color: getCategoryColor(t.category) }}>
-                            {t.subcategory.replace("_", " ")}
-                          </td>
-                          <td>{t.note || ""}</td>
-                          <td style={{ color: getCategoryColor(t.category) }}>
-                            {t.amount % 1 === 0
-                              ? t.amount
-                              : Number(t.amount).toFixed(2)}{" "}
-                            {profile ? CURRENCY_SYMBOLS[profile.currency] : ""}
-                          </td>
-                        </tr>
-                      ))}
-                    </React.Fragment>
-                  ))}
-              </tbody>
-            </table>
-          </>
-        )}
-      </div>
     </div>
   );
 };
