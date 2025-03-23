@@ -18,7 +18,9 @@ import {
 import MonthContext from "../context/MonthContext";
 import "../index.css";
 import PaginatedTable from "./PaginatedTable";
+import Calculator from "./Calculator";
 import FileUpload from "./FileUpload";
+import { evaluate } from "mathjs";
 
 const Transactions = () => {
   const { user, CURRENCY_SYMBOLS } = useContext(AuthContext);
@@ -38,6 +40,7 @@ const Transactions = () => {
   const [convertedAmount, setConvertedAmount] = useState(null);
   const [showCustomRateField, setShowCustomRateField] = useState(false);
   const [customExchangeRate, setCustomExchangeRate] = useState("");
+  const [showCalculator, setShowCalculator] = useState("");
 
   const [newTransaction, setNewTransaction] = useState({
     subcategory: "",
@@ -797,6 +800,27 @@ const Transactions = () => {
                   required
                 />
               </label>
+
+              {/* calcualtor */}
+              <button
+                type="button"
+                onClick={() => setShowCalculator(!showCalculator)}
+                style={{ marginLeft: "10px" }}
+              >
+                {showCalculator ? "Hide Calculator" : "Open Calculator"}
+              </button>
+
+              {showCalculator && (
+                <Calculator
+                  onResult={(result) => {
+                    // Set the amount from the calculator result.
+                    setNewTransaction((prev) => ({ ...prev, amount: result }));
+                    setShowCalculator(false);
+                  }}
+                  onClose={() => setShowCalculator(false)}
+                />
+              )}
+
               <label style={{ marginLeft: "10px" }}>
                 Currency:
                 <select
