@@ -11,7 +11,6 @@ import {
   YAxis,
   Tooltip,
   ResponsiveContainer,
-  CartesianGrid,
   LabelList,
   Legend,
   Cell,
@@ -19,6 +18,7 @@ import {
 import MonthContext from "../context/MonthContext";
 import "../index.css";
 import PaginatedTable from "./PaginatedTable";
+import FileUpload from "./FileUpload";
 
 const Transactions = () => {
   const { user, CURRENCY_SYMBOLS } = useContext(AuthContext);
@@ -181,6 +181,10 @@ const Transactions = () => {
   const handleRowClick = (transaction) => {
     setSelectedTransaction({ ...transaction });
     setOriginalTransaction({ ...transaction });
+    setSelectedCurrency(profile?.currency);
+    setConvertedAmount(null);
+    setShowCustomRateField(false);
+    setCustomExchangeRate("");
     console.log("Selected transaction: ", transaction);
   };
 
@@ -195,9 +199,18 @@ const Transactions = () => {
   const handleSaveEdit = async () => {
     if (!selectedTransaction) return;
     try {
+      const updatedAmount =
+        selectedCurrency !== profile?.currency && convertedAmount !== null
+          ? convertedAmount
+          : selectedTransaction.amount;
+      const updatedTransaction = {
+        ...selectedTransaction,
+        amount: updatedAmount,
+      };
+
       const response = await axios.put(
         `http://127.0.0.1:8000/api/transactions/${selectedTransaction.id}/`,
-        selectedTransaction,
+        updatedTransaction,
         { headers }
       );
       setTransactions(
@@ -264,17 +277,27 @@ const Transactions = () => {
     }
   };
 
+  const handleEditAmountChange = (e) => {
+    const value = e.target.value;
+    setSelectedTransaction((prev) => ({ ...prev, amount: value }));
+    if (value) {
+      convertAmount(selectedCurrency, value);
+    } else {
+      setConvertedAmount(null);
+    }
+  };
+
   if (loading) return <p>Loading transactions...</p>;
   if (error) return <p style={{ color: "red" }}>{error}</p>;
 
   const convertAmount = async (sourceCurrency, amount) => {
-    // If custom rate is enabled and provided, use it.
+    // if custom rate is chosen
     if (showCustomRateField && customExchangeRate) {
       const converted = amount * Number(customExchangeRate);
       setConvertedAmount(Number(converted.toFixed(2)));
       return;
     }
-    // Otherwise, fetch rates from the API.
+    // otherwise get rate from API
     try {
       const response = await fetch(
         `https://openexchangerates.org/api/latest.json?app_id=9ffddd5f54f046a0870f20c1633b320b`
@@ -310,6 +333,14 @@ const Transactions = () => {
       convertAmount(selectedCurrency, value);
     } else {
       setConvertedAmount(null);
+    }
+  };
+
+  const handleEditCurrencyChange = (e) => {
+    const currency = e.target.value;
+    setSelectedCurrency(currency);
+    if (selectedTransaction && selectedTransaction.amount) {
+      convertAmount(currency, selectedTransaction.amount);
     }
   };
 
@@ -370,7 +401,6 @@ const Transactions = () => {
                 <XAxis type="number" domain={[0, summary.total_expense]} hide />
                 <YAxis type="category" dataKey="name" hide />
                 <Tooltip />
-                {/* <Legend /> */}
 
                 <Bar
                   dataKey="Overspent"
@@ -468,6 +498,11 @@ const Transactions = () => {
         </p>
       )}
 
+      {/* file upload */}
+      <section>
+        <FileUpload />
+      </section>
+
       {/* Show transactions */}
       <div style={{ display: "flex", gap: "20px", flexWrap: "wrap" }}>
         <div style={{ flex: "1" }}>
@@ -544,15 +579,101 @@ const Transactions = () => {
               </optgroup>
             </select>
           </label>
+
           <label>
-            Amount:
+            Amount:{" "}
             <input
               type="number"
               name="amount"
               value={selectedTransaction.amount}
-              onChange={handleEditChange}
+              onChange={handleEditAmountChange}
+              required
             />
           </label>
+          <label style={{ marginLeft: "10px" }}>
+            Currency:
+            <select
+              name="currency"
+              value={selectedCurrency}
+              onChange={handleEditCurrencyChange} // Use the dedicated handler
+            >
+              {profile && profile.currency ? (
+                <>
+                  <option key={profile.currency} value={profile.currency}>
+                    {profile.currency}
+                  </option>
+                  {Object.entries(CURRENCY_SYMBOLS)
+                    .filter(([code]) => code !== profile.currency)
+                    .map(([code]) => (
+                      <option key={code} value={code}>
+                        {code}
+                      </option>
+                    ))}
+                </>
+              ) : (
+                Object.entries(CURRENCY_SYMBOLS).map(([code]) => (
+                  <option key={code} value={code}>
+                    {code}
+                  </option>
+                ))
+              )}
+            </select>
+          </label>
+
+          {/* Button for custom exchange rate */}
+          <div style={{ marginTop: "10px" }}>
+            <button
+              type="button"
+              onClick={() => {
+                setShowCustomRateField(!showCustomRateField);
+                if (showCustomRateField) {
+                  setCustomExchangeRate("");
+                  if (selectedTransaction.amount) {
+                    convertAmount(selectedCurrency, selectedTransaction.amount);
+                  }
+                }
+              }}
+            >
+              {showCustomRateField
+                ? "Remove Custom Rate"
+                : "Set Custom Exchange Rate"}
+            </button>
+          </div>
+
+          {/* Custom exchange rate input */}
+          {showCustomRateField && (
+            <div style={{ marginTop: "10px" }}>
+              <label>
+                Custom Exchange Rate:
+                <input
+                  type="number"
+                  step="0.01"
+                  value={customExchangeRate}
+                  onChange={(e) => {
+                    const rate = e.target.value;
+                    setCustomExchangeRate(rate);
+                    if (selectedTransaction.amount) {
+                      const converted =
+                        selectedTransaction.amount * Number(rate);
+                      setConvertedAmount(Number(converted.toFixed(2)));
+                    }
+                  }}
+                />
+              </label>
+            </div>
+          )}
+
+          {/* Show converted amount if applicable */}
+          {convertedAmount !== null &&
+            selectedCurrency !== profile?.currency && (
+              <div style={{ marginTop: "10px" }}>
+                <p>
+                  Converted Amount: {convertedAmount.toFixed(2)}{" "}
+                  {profile?.currency}
+                </p>
+              </div>
+            )}
+
           <label>
             Note:
             <input
@@ -603,7 +724,7 @@ const Transactions = () => {
             setShowForm((prev) => {
               const newShow = !prev;
               if (newShow) {
-                // Reset currency to default and clear converted amount when form is shown.
+                // Reset currency to default and clear converted amount
                 setSelectedCurrency(profile?.currency);
                 setConvertedAmount(null);
                 setShowCustomRateField(false);
@@ -707,13 +828,12 @@ const Transactions = () => {
               </label>
             </div>
 
-            {/* Button to toggle custom exchange rate */}
+            {/* Button for custom exchange rate */}
             <div style={{ marginTop: "10px" }}>
               <button
                 type="button"
                 onClick={() => {
                   setShowCustomRateField(!showCustomRateField);
-                  // Clear custom rate if removing the custom field.
                   if (showCustomRateField) {
                     setCustomExchangeRate("");
                     if (newTransaction.amount) {
@@ -728,7 +848,7 @@ const Transactions = () => {
               </button>
             </div>
 
-            {/* Custom exchange rate input field */}
+            {/* custom exchange rate input */}
             {showCustomRateField && (
               <div style={{ marginTop: "10px" }}>
                 <label>
@@ -743,7 +863,7 @@ const Transactions = () => {
               </div>
             )}
 
-            {/* Only show the converted amount if a conversion has been done and the currency differs */}
+            {/* show converted amount if selected cur is different from default cur */}
             {convertedAmount !== null &&
               selectedCurrency !== profile?.currency && (
                 <div style={{ marginTop: "10px" }}>

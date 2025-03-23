@@ -1,6 +1,6 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
-from .views import UserFinancialProfileViewSet, TransactionViewSet, monthly_summary, expenses_months, sum_subcategories_month, avg_subcategories
+from .views import UserFinancialProfileViewSet, FileUploadView, TransactionViewSet, monthly_summary, expenses_months, sum_subcategories_month, avg_subcategories
 
 router = DefaultRouter()
 #automatically creates endpoints
@@ -18,5 +18,6 @@ urlpatterns = [
     ),
     path('expenses-months', expenses_months, name='expenses-months'),
     path('sum-subcategories-month/<int:year>/<int:month>/', sum_subcategories_month, name='sum-subcategories-month'),
-     path('avg-subcategories', avg_subcategories, name='avg-subcategories'),
+    path('avg-subcategories', avg_subcategories, name='avg-subcategories'),
+    path('upload/', FileUploadView.as_view(), name='upload'),
 ]

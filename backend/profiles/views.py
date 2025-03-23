@@ -8,8 +8,11 @@ from rest_framework.decorators import api_view, permission_classes, action
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 import calendar
+from rest_framework.views import APIView
+import pandas as pd
 from rest_framework import status
-
+from rest_framework.parsers import MultiPartParser, FormParser
+from io import BytesIO
 
 #viewset - Group several related actions in one class (CRUD)
 class UserFinancialProfileViewSet(viewsets.ModelViewSet):
@@ -124,6 +127,7 @@ def sum_subcategories_month(request, year, month):
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def avg_subcategories(request):
+    
     user = request.user
     now = datetime.now()
     cur_year = now.year
@@ -176,3 +180,66 @@ def avg_subcategories(request):
         })
 
     return Response(output)
+
+class FileUploadView(APIView):
+    parser_classes = (MultiPartParser, FormParser)
+
+    def post(self, request, format=None):
+        file = request.FILES.get('file')
+        if not file:
+            return Response({'error': 'No file provided.'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        try:
+            file_bytes = file.read()
+            stream = BytesIO(file_bytes)
+            df = pd.read_excel(stream)
+            df.columns = df.columns.str.strip()  # Clean header names
+            print("Excel columns:", df.columns.tolist())
+        except Exception as e:
+            return Response({'error': 'Invalid Excel file.'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        required_columns = ['Completed Date', 'Description', 'Amount', 'Category']
+        if not all(col in df.columns for col in required_columns):
+            return Response({
+                'error': 'Missing one or more required columns.',
+                'columns_found': df.columns.tolist()
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        created = 0
+        errors = []
+        # Process each row from the DataFrame using the serializer
+        for index, row in df.iterrows():
+            try:
+                date_value = row['Completed Date']
+                if not isinstance(date_value, datetime):
+                    # Adjust the format string as needed
+                    date_value = datetime.strptime(str(date_value), "%m/%d/%Y %H:%M").date()
+                else:
+                    date_value = date_value.date()
+                
+                # Build data for serializer
+                serializer_data = {
+                    "date": date_value,
+                    "note": row['Description'],
+                    "amount": abs(row['Amount']),  # Convert negative to positive if needed
+                    "subcategory": row['Category'],  # This is used to derive category
+                }
+                
+                serializer = TransactionSerializer(data=serializer_data)
+                if serializer.is_valid():
+                    serializer.save(user=request.user)
+                    created += 1
+                else:
+                    errors.append({f"row_{index}": serializer.errors})
+            except Exception as e:
+                errors.append({f"row_{index}": str(e)})
+                continue
+        
+        if errors:
+            # Optionally, you might log errors and decide how to inform the user.
+            return Response({
+                'message': f'{created} transactions created.',
+                'errors': errors
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        return Response({'message': f'{created} transactions uploaded successfully.'}, status=status.HTTP_201_CREATED)

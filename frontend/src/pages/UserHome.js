@@ -55,9 +55,9 @@ const UserHome = () => {
   }, [user, selectedMonth]);
 
   const data = [
-    { category: "Expense", amount: summary.total_expense, color: "#FF6961" },
-    { category: "Income", amount: summary.total_income, color: "#77DD77" },
-    { category: "Savings", amount: summary.total_investment, color: "#6CA0DC" },
+    { category: "Expense", amount: summary.total_expense, color: "#E8A09A" },
+    { category: "Income", amount: summary.total_income, color: "#C6D68F" },
+    { category: "Savings", amount: summary.total_investment, color: "#9BBFE0" },
   ];
 
   const CustomXAxisTick = ({ x, y, payload, data }) => {
