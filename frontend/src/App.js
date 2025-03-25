@@ -12,6 +12,8 @@ import ChangePassword from "./pages/ChangePassword";
 import ChangeUsername from "./pages/ChangeUsername";
 import { MonthProvider } from "./context/MonthContext";
 import { FetchProvider } from "./context/FetchContext";
+import "./index.css";
+import "bootstrap/dist/css/bootstrap.min.css";
 
 function App() {
   return (

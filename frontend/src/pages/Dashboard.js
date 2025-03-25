@@ -62,17 +62,12 @@ const Dashboard = () => {
   if (error) return <p style={{ color: "red" }}> {error}</p>;
 
   return (
-    <div className="dashboard-container">
-      <div className="dashboard-content">
-        {profile ? (
-          <p>Welcome! Your financial profile is set up. 🎉</p>
-        ) : (
-          <div>
-            <p>Please complete your profile.</p>
-            <FinancialProfileForm onSuccess={handleProfileSubmit} />
-          </div>
-        )}
-      </div>
+    <div style={{ minHeight: "100vh", backgroundColor: "#E9E9DF" }}>
+      {profile ? (
+        <p>Your financial profile is set up. Start exploring! </p>
+      ) : (
+        <FinancialProfileForm onSuccess={handleProfileSubmit} />
+      )}
     </div>
   );
 };

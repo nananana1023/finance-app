@@ -1,3 +1,12 @@
+import {
+  Container,
+  Row,
+  Col,
+  Card,
+  Form,
+  Button,
+  ListGroup,
+} from "react-bootstrap";
 import { useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
@@ -164,127 +173,187 @@ const Register = () => {
   };
 
   return (
-    <div>
-      <h2>{step === 1 ? "Register" : "Verify Email"}</h2>
-
-      {step === 1 ? (
-        <form onSubmit={handleRegister}>
-          <input
-            type="text"
-            placeholder="Username"
-            value={username}
-            onChange={(e) => validateUsername(e.target.value)}
-            required
-          />
-          {usernameError && (
-            <p style={{ color: "red", fontSize: "0.9rem" }}>{usernameError}</p>
-          )}
-
-          <input
-            type="email"
-            placeholder="Email"
-            value={email}
-            onChange={(e) => validateEmail(e.target.value)}
-            required
-          />
-          {emailError && (
-            <p style={{ color: "red", fontSize: "0.9rem" }}>{emailError}</p>
-          )}
-
-          <div style={{ position: "relative" }}>
-            <input
-              type={showPassword ? "text" : "password"}
-              placeholder="Password"
-              value={password}
-              onChange={(e) => checkPasswordStrength(e.target.value)} // Validate password as user types
-              required
-              style={{ width: "100%", paddingRight: "40px" }}
-            />
-            <button
-              type="button"
-              onClick={() => setShowPassword(!showPassword)}
-              style={{
-                position: "absolute",
-                right: "10px",
-                top: "50%",
-                transform: "translateY(-50%)",
-                border: "none",
-                background: "none",
-                cursor: "pointer",
-                fontSize: "16px",
-              }}
-            >
-              {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
-            </button>
-          </div>
-          {showPasswordValidation && (
-            <ul style={{ listStyleType: "none", padding: 0 }}>
-              <li style={{ color: passwordChecks.length ? "green" : "red" }}>
-                {passwordChecks.length ? "✅" : "❌"} At least 8 characters
-              </li>
-              <li style={{ color: passwordChecks.uppercase ? "green" : "red" }}>
-                {passwordChecks.uppercase ? "✅" : "❌"} At least one uppercase
-                letter
-              </li>
-              <li style={{ color: passwordChecks.lowercase ? "green" : "red" }}>
-                {passwordChecks.lowercase ? "✅" : "❌"} At least one lowercase
-                letter
-              </li>
-              <li style={{ color: passwordChecks.number ? "green" : "red" }}>
-                {passwordChecks.number ? "✅" : "❌"} At least one number
-              </li>
-              <li
-                style={{ color: passwordChecks.specialChar ? "green" : "red" }}
-              >
-                {passwordChecks.specialChar ? "✅" : "❌"} At least one special
-                character
-              </li>
-            </ul>
-          )}
-          <button
-            type="submit"
-            disabled={
-              !!usernameError ||
-              !!emailError ||
-              !Object.values(passwordChecks).every(Boolean)
-            }
-          >
-            Sign Up
-          </button>
-
-          <p style={{ marginTop: "10px", fontSize: "0.9rem" }}>
-            Already have an account?{" "}
-            <button
-              onClick={() => navigate("/login")}
-              style={{
-                background: "none",
-                border: "none",
-                color: "blue",
-                cursor: "pointer",
-                textDecoration: "underline",
-                fontSize: "0.9rem",
-              }}
-            >
-              Log in
-            </button>
+    <Container fluid className="vh-100" style={{ backgroundColor: "#E9E9DF" }}>
+      <Row className="h-100">
+        <Col
+          md={6}
+          className="d-flex flex-column justify-content-center align-items-center text-center"
+          style={{ backgroundColor: "#A5BB9F", animation: "fadeIn 1s" }}
+        >
+          <h1 style={{ fontWeight: 700 }}>MoneySavvy</h1>
+          <p>
+            Your smart finance manager. Track your transactions effortlessly.
           </p>
-        </form>
-      ) : (
-        <form onSubmit={handleVerifyCode}>
-          <p>A verification code was sent to {email}. Enter the code below:</p>
-          <input
-            type="text"
-            placeholder="Enter verification code"
-            value={verificationCode}
-            onChange={(e) => setVerificationCode(e.target.value)}
-            required
-          />
-          <button type="submit">Verify Code</button>
-        </form>
-      )}
-
-      {error && <p style={{ color: "red" }}>{error}</p>}
-    </div>
+        </Col>
+        <Col
+          md={6}
+          className="d-flex flex-column justify-content-center align-items-center"
+        >
+          <div className="w-75">
+            {step === 1 ? (
+              <>
+                <h2 className="mb-4 text-center">Sign Up</h2>
+                <form onSubmit={handleRegister}>
+                  <input
+                    type="text"
+                    placeholder="Username"
+                    value={username}
+                    onChange={(e) => validateUsername(e.target.value)}
+                    required
+                    className="form-control mb-3"
+                  />
+                  {usernameError && (
+                    <p style={{ color: "red", fontSize: "0.9rem" }}>
+                      {usernameError}
+                    </p>
+                  )}
+                  <input
+                    type="email"
+                    placeholder="Email"
+                    value={email}
+                    onChange={(e) => validateEmail(e.target.value)}
+                    required
+                    className="form-control mb-3"
+                  />
+                  {emailError && (
+                    <p style={{ color: "red", fontSize: "0.9rem" }}>
+                      {emailError}
+                    </p>
+                  )}
+                  <div className="position-relative mb-3">
+                    <input
+                      type={showPassword ? "text" : "password"}
+                      placeholder="Password"
+                      value={password}
+                      onChange={(e) => checkPasswordStrength(e.target.value)}
+                      required
+                      className="form-control"
+                      style={{ paddingRight: "40px" }}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="btn btn-link position-absolute"
+                      style={{
+                        right: "10px",
+                        top: "50%",
+                        transform: "translateY(-50%)",
+                        fontSize: "16px",
+                      }}
+                    >
+                      {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                    </button>
+                  </div>
+                  {showPasswordValidation && (
+                    <ul style={{ listStyleType: "none", padding: 0 }}>
+                      <li
+                        style={{
+                          color: passwordChecks.length ? "green" : "red",
+                        }}
+                      >
+                        {passwordChecks.length ? "✅" : "❌"} At least 8
+                        characters
+                      </li>
+                      <li
+                        style={{
+                          color: passwordChecks.uppercase ? "green" : "red",
+                        }}
+                      >
+                        {passwordChecks.uppercase ? "✅" : "❌"} At least one
+                        uppercase letter
+                      </li>
+                      <li
+                        style={{
+                          color: passwordChecks.lowercase ? "green" : "red",
+                        }}
+                      >
+                        {passwordChecks.lowercase ? "✅" : "❌"} At least one
+                        lowercase letter
+                      </li>
+                      <li
+                        style={{
+                          color: passwordChecks.number ? "green" : "red",
+                        }}
+                      >
+                        {passwordChecks.number ? "✅" : "❌"} At least one
+                        number
+                      </li>
+                      <li
+                        style={{
+                          color: passwordChecks.specialChar ? "green" : "red",
+                        }}
+                      >
+                        {passwordChecks.specialChar ? "✅" : "❌"} At least one
+                        special character
+                      </li>
+                    </ul>
+                  )}
+                  <button
+                    type="submit"
+                    disabled={
+                      !!usernameError ||
+                      !!emailError ||
+                      !Object.values(passwordChecks).every(Boolean)
+                    }
+                    className="btn btn-primary w-100"
+                    style={{
+                      backgroundColor: "#BE9986",
+                      borderColor: "#B5C99A",
+                    }}
+                  >
+                    Sign Up
+                  </button>
+                  <p
+                    className="mt-3 text-center"
+                    style={{ fontSize: "0.9rem" }}
+                  >
+                    Already have an account?{" "}
+                    <button
+                      onClick={() => navigate("/login")}
+                      className="btn btn-link"
+                      style={{
+                        fontSize: "0.9rem",
+                      }}
+                    >
+                      Log in
+                    </button>
+                  </p>
+                </form>
+              </>
+            ) : (
+              <>
+                <h2 className="mb-4 text-center">Verify Email</h2>
+                <form onSubmit={handleVerifyCode}>
+                  <p>
+                    A verification code was sent to {email}. Enter the code
+                    below:
+                  </p>
+                  <input
+                    type="text"
+                    placeholder="Enter verification code"
+                    value={verificationCode}
+                    onChange={(e) => setVerificationCode(e.target.value)}
+                    required
+                    className="form-control mb-3"
+                  />
+                  <button
+                    type="submit"
+                    className="btn btn-primary w-100"
+                    style={{
+                      backgroundColor: "#BE9986",
+                      borderColor: "#B5C99A",
+                    }}
+                  >
+                    Verify Code
+                  </button>
+                </form>
+              </>
+            )}
+            {error && <p style={{ color: "red" }}>{error}</p>}
+          </div>
+        </Col>
+      </Row>
+    </Container>
   );
 };
 

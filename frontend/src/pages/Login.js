@@ -1,36 +1,29 @@
-import { useState, useContext } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import axios from "axios";
-import AuthContext from "../context/AuthContext";
 import { Eye, EyeOff } from "lucide-react";
-import { useLocation } from "react-router-dom";
+import { Container, Row, Col, Card, Form, Button } from "react-bootstrap";
+import "../styles/login.css"; // Include animation styles here
 
 const Login = () => {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
-
-  const { loginUser } = useContext(AuthContext);
-  const navigate = useNavigate(); // useNavigate inside component
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
+  const navigate = useNavigate();
   const location = useLocation();
   const successMessage = location.state?.successMessage;
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
     try {
       const response = await axios.post("http://127.0.0.1:8000/auth/login/", {
         username,
         password,
       });
-
       console.log("Login successful:", response.data);
-
-      // Store tokens in local storage or state
       localStorage.setItem("accessToken", response.data.access);
       localStorage.setItem("refreshToken", response.data.refresh);
-
       navigate("/dashboard");
     } catch (error) {
       console.error("Login error:", error.response?.data || error.message);
@@ -39,86 +32,84 @@ const Login = () => {
   };
 
   return (
-    <div>
-      <h2>Log in</h2>
-      {successMessage && (
-        <p style={{ color: "green", fontWeight: "bold" }}>{successMessage}</p>
-      )}
-      <form onSubmit={handleSubmit}>
-        <input
-          type="text"
-          placeholder="Username"
-          value={username}
-          onChange={(e) => setUsername(e.target.value)}
-          required
-        />
+    <Container fluid className="vh-100" style={{ backgroundColor: "#E9E9DF" }}>
+      <Row className="h-100">
+        <Col
+          md={6}
+          className="d-flex flex-column justify-content-center align-items-center text-center"
+          style={{
+            backgroundColor: "#A5BB9F",
+            animation: "fadeIn 1s",
+          }}
+        >
+          <h1 style={{ fontWeight: 700 }}>MoneySavvy</h1>
+          <p>
+            Your smart finance manager. Track your transactions effortlessly.
+          </p>
+        </Col>
 
-        <div style={{ position: "relative" }}>
-          <input
-            type={showPassword ? "text" : "password"} // Toggle input type
-            placeholder="Password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-            style={{ width: "100%", paddingRight: "40px" }}
-          />
-          <button
-            type="button"
-            onClick={() => setShowPassword(!showPassword)}
-            style={{
-              position: "absolute",
-              right: "10px",
-              top: "50%",
-              transform: "translateY(-50%)",
-              border: "none",
-              background: "none",
-              cursor: "pointer",
-              fontSize: "16px",
-            }}
-          >
-            {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
-          </button>
-        </div>
-
-        {error && <p style={{ color: "red", fontSize: "0.9rem" }}>{error}</p>}
-
-        <button type="submit" disabled={!username || !password}>
-          Log In
-        </button>
-
-        <p style={{ marginTop: "10px", fontSize: "0.9rem" }}>
-          <button
-            onClick={() => navigate("/register")}
-            style={{
-              background: "none",
-              border: "none",
-              color: "blue",
-              cursor: "pointer",
-              textDecoration: "underline",
-              fontSize: "0.9rem",
-            }}
-          >
-            Create a new account
-          </button>
-        </p>
-
-        {/* <p>
-          <button
-            onClick={() => navigate("/forgot-password")}
-            style={{
-              background: "none",
-              border: "none",
-              color: "blue",
-              cursor: "pointer",
-              textDecoration: "underline",
-              fontSize: "0.9rem",
-            }}
-          >
-            Forgot your password?
-          </button>
-        </p> */}
-      </form>
-    </div>
+        <Col
+          md={6}
+          className="d-flex flex-column justify-content-center align-items-center"
+        >
+          <div className="w-75">
+            <h2 className="mb-4 text-center">Log In</h2>
+            {successMessage && (
+              <p className="text-success text-center">{successMessage}</p>
+            )}
+            {error && <p className="text-danger text-center">{error}</p>}
+            <Form onSubmit={handleSubmit}>
+              <Form.Group className="mb-3" controlId="formUsername">
+                <Form.Control
+                  type="text"
+                  placeholder="Username"
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
+                  required
+                />
+              </Form.Group>
+              <Form.Group
+                className="mb-3 position-relative"
+                controlId="formPassword"
+              >
+                <Form.Control
+                  type={showPassword ? "text" : "password"}
+                  placeholder="Password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                />
+                <Button
+                  variant="link"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="position-absolute top-50 end-0 translate-middle-y me-2 p-0"
+                >
+                  {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                </Button>
+              </Form.Group>
+              <div className="d-grid">
+                <Button
+                  type="submit"
+                  style={{
+                    backgroundColor: "#BE9986",
+                    borderColor: "#B5C99A",
+                  }}
+                  disabled={!username || !password}
+                >
+                  Log In
+                </Button>
+              </div>
+            </Form>
+            <p className="mt-3 text-center">
+              Don't have an account?{" "}
+              <Button variant="link" onClick={() => navigate("/register")}>
+                Sign Up
+              </Button>
+            </p>
+          </div>
+        </Col>
+      </Row>
+    </Container>
   );
 };
 

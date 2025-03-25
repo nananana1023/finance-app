@@ -3,23 +3,29 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
+    "@tailwindcss/cli": "^4.0.15",
     "@tailwindcss/vite": "^4.0.5",
     "axios": "^1.7.9",
+    "bootstrap": "^5.3.3",
     "cra-template": "1.2.0",
+    "hoist-non-react-statics": "^3.3.2",
+    "lucide-react": "^0.483.0",
     "mathjs": "^14.3.1",
     "react": "^19.0.0",
+    "react-bootstrap": "^2.10.9",
     "react-dom": "^19.0.0",
+    "react-is": "^19.0.0",
     "react-router-dom": "^7.1.5",
     "react-scripts": "5.0.1",
     "recharts": "^2.15.1",
-    "tailwindcss": "^4.0.5",
     "web-vitals": "^4.2.4"
   },
   "scripts": {
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
-    "eject": "react-scripts eject"
+    "eject": "react-scripts eject",
+    "tailwind": "tailwindcss -v"
   },
   "eslintConfig": {
     "extends": [
@@ -38,5 +44,13 @@
       "last 1 firefox version",
       "last 1 safari version"
     ]
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4.0.15",
+    "autoprefixer": "^10.4.21",
+    "html-webpack-plugin": "^5.6.3",
+    "postcss": "^8.5.3",
+    "react-app-rewired": "^2.2.1",
+    "tailwindcss": "^4.0.15"
   }
 }

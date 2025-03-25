@@ -4,46 +4,24 @@ const Home = () => {
   const navigate = useNavigate();
 
   return (
-    <div style={styles.container}>
-      {/* Header */}
-      <h1 style={styles.header}>MoneySavvy</h1>
-
-      {/* Buttons */}
-      <div style={styles.buttonContainer}>
-        <button style={styles.button} onClick={() => navigate("/login")}>
+    <div className="text-center mt-12">
+      <h1 className="text-4xl font-bold mb-6 text-gray-800">MoneySavvy</h1>
+      <div className="flex justify-center gap-5">
+        <button
+          className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
+          onClick={() => navigate("/login")}
+        >
           Log In
         </button>
-        <button style={styles.button} onClick={() => navigate("/register")}>
+        <button
+          className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
+          onClick={() => navigate("/register")}
+        >
           Sign Up
         </button>
       </div>
     </div>
   );
-};
-
-const styles = {
-  container: {
-    textAlign: "center",
-    marginTop: "50px",
-  },
-  header: {
-    fontSize: "2rem",
-    marginBottom: "20px",
-  },
-  buttonContainer: {
-    display: "flex",
-    justifyContent: "center",
-    gap: "20px",
-  },
-  button: {
-    padding: "10px 20px",
-    fontSize: "1rem",
-    cursor: "pointer",
-    borderRadius: "5px",
-    border: "none",
-    backgroundColor: "blue",
-    color: "white",
-  },
 };
 
 export default Home;

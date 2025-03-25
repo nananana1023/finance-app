@@ -417,7 +417,7 @@ const Transactions = () => {
                     position="inside"
                     fill="black"
                     formatter={(value) =>
-                      `${value}${
+                      `${value.toFixed(2)}${
                         CURRENCY_SYMBOLS[profile.currency] || profile.currency
                       }`
                     }

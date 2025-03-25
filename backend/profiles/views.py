@@ -193,7 +193,7 @@ class FileUploadView(APIView):
             file_bytes = file.read()
             stream = BytesIO(file_bytes)
             df = pd.read_excel(stream)
-            df.columns = df.columns.str.strip()  # Clean header names
+            df.columns = df.columns.str.strip() 
             print("Excel columns:", df.columns.tolist())
         except Exception as e:
             return Response({'error': 'Invalid Excel file.'}, status=status.HTTP_400_BAD_REQUEST)
@@ -207,22 +207,20 @@ class FileUploadView(APIView):
         
         created = 0
         errors = []
-        # Process each row from the DataFrame using the serializer
+
         for index, row in df.iterrows():
             try:
                 date_value = row['Completed Date']
                 if not isinstance(date_value, datetime):
-                    # Adjust the format string as needed
                     date_value = datetime.strptime(str(date_value), "%m/%d/%Y %H:%M").date()
                 else:
                     date_value = date_value.date()
                 
-                # Build data for serializer
                 serializer_data = {
                     "date": date_value,
                     "note": row['Description'],
-                    "amount": abs(row['Amount']),  # Convert negative to positive if needed
-                    "subcategory": row['Category'],  # This is used to derive category
+                    "amount": abs(row['Amount']),  
+                    "subcategory": row['Category'], 
                 }
                 
                 serializer = TransactionSerializer(data=serializer_data)
@@ -236,7 +234,6 @@ class FileUploadView(APIView):
                 continue
         
         if errors:
-            # Optionally, you might log errors and decide how to inform the user.
             return Response({
                 'message': f'{created} transactions created.',
                 'errors': errors
