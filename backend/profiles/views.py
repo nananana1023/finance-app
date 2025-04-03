@@ -14,7 +14,6 @@ from rest_framework import status
 from rest_framework.parsers import MultiPartParser, FormParser
 from io import BytesIO
 
-#viewset - Group several related actions in one class (CRUD)
 class UserFinancialProfileViewSet(viewsets.ModelViewSet):
     queryset = UserFinancialProfile.objects.all()
     serializer_class = UserFinancialProfileSerializer
@@ -61,8 +60,6 @@ class TransactionViewSet(viewsets.ModelViewSet):
         queryset = self.get_queryset().filter(date__year=year, date__month=month)
         serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data)
-
-#function-based views handle HTTP requests directly
 
 #Filters transactions by selected month and user.
 @api_view(['GET'])

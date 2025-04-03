@@ -2,6 +2,8 @@ import { useState, useContext } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import AuthContext from "../context/AuthContext";
+import Header from "../components/Header";
+import { Container, Row, Col, Card, Form, Button } from "react-bootstrap";
 
 const ChangeUsername = () => {
   const { user } = useContext(AuthContext);
@@ -37,38 +39,83 @@ const ChangeUsername = () => {
   };
 
   return (
-    <div>
-      <h2>Change Username</h2>
-      {error && <p style={{ color: "red" }}>{error}</p>}
-      {successMessage && <p style={{ color: "green" }}>{successMessage}</p>}
-      <form onSubmit={handleSubmit}>
-        <div>
-          <label>Password</label>
-          <input
-            type="password"
-            name="old_password"
-            value={formData.old_password}
-            onChange={(e) =>
-              setFormData({ ...formData, old_password: e.target.value })
-            }
-            required
-          />
-        </div>
-        <div>
-          <label>New Username</label>
-          <input
-            type="text"
-            name="new_username"
-            value={formData.new_username}
-            onChange={(e) =>
-              setFormData({ ...formData, new_username: e.target.value })
-            }
-            required
-          />
-        </div>
-        <button type="submit">Submit</button>
-      </form>
-      <button onClick={() => navigate("/profile")}>Back to Profile</button>
+    <div
+      style={{
+        minHeight: "100vh",
+        backgroundColor: "#fff",
+        fontFamily: "Monospace",
+      }}
+    >
+      <Header />
+      <div style={{ width: "50%", margin: "0 auto", padding: "20px" }}>
+        <h2>Change Username</h2>
+        {successMessage && (
+          <div className="alert alert-success" role="alert">
+            {successMessage}
+          </div>
+        )}
+        {error && (
+          <div className="alert alert-danger" role="alert">
+            {error}
+          </div>
+        )}
+        <form onSubmit={handleSubmit}>
+          <div className="mb-3">
+            <label>Password</label>
+            <input
+              type="password"
+              name="old_password"
+              value={formData.old_password}
+              onChange={(e) =>
+                setFormData({ ...formData, old_password: e.target.value })
+              }
+              required
+              className="form-control"
+            />
+          </div>
+          <div className="mb-3">
+            <label>New Username</label>
+            <input
+              type="text"
+              name="new_username"
+              value={formData.new_username}
+              onChange={(e) =>
+                setFormData({ ...formData, new_username: e.target.value })
+              }
+              required
+              className="form-control"
+            />
+          </div>
+          <button
+            type="submit"
+            className="btn btn-animate mt-3"
+            style={{
+              backgroundColor: "#A5BB9F",
+              color: "black",
+              border: "none",
+            }}
+          >
+            Submit
+          </button>
+        </form>
+        <button
+          onClick={() => navigate("/profile")}
+          className="btn btn-animate mt-3"
+          style={{
+            backgroundColor: "#D9C9B3",
+            color: "black",
+            border: "none",
+          }}
+        >
+          Back to Profile
+        </button>
+      </div>
+      <style>{`
+        .btn-animate:hover {
+          transform: scale(1.05);
+          transition: transform 0.2s;
+        }
+      `}</style>
     </div>
   );
 };

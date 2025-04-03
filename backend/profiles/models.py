@@ -64,7 +64,7 @@ class Transaction(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     category = models.CharField(max_length=20, choices=CATEGORY_CHOICES, blank=True)  # Auto filled by serializer
     subcategory = models.CharField(max_length=30)
-    amount = models.FloatField(validators=[validate_positive])
+    amount = models.DecimalField(max_digits=10, decimal_places=2, validators=[validate_positive])
     date = models.DateField()
     note = models.TextField(blank=True, null=True) #optional
     merchant = models.CharField(max_length=255, blank=True, default="")   #optional

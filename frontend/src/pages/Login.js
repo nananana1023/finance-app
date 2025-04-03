@@ -3,7 +3,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import axios from "axios";
 import { Eye, EyeOff } from "lucide-react";
 import { Container, Row, Col, Card, Form, Button } from "react-bootstrap";
-import "../styles/login.css"; // Include animation styles here
+import "../styles/login.css";
 
 const Login = () => {
   const [username, setUsername] = useState("");
@@ -43,9 +43,7 @@ const Login = () => {
           }}
         >
           <h1 style={{ fontWeight: 700 }}>MoneySavvy</h1>
-          <p>
-            Your smart finance manager. Track your transactions effortlessly.
-          </p>
+          <p>Know your money. Control your future.</p>
         </Col>
 
         <Col

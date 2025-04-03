@@ -1,5 +1,15 @@
 import React, { useState, useContext } from "react";
 import AuthContext from "../context/AuthContext";
+import "../styles/table.css";
+import {
+  Container,
+  Row,
+  Col,
+  Card,
+  Form,
+  Button,
+  InputGroup,
+} from "react-bootstrap";
 
 const getCategoryColor = (cat) => {
   if (cat === "expense") return "#78281f";
@@ -35,27 +45,23 @@ const filterTransactions = (groupedTransactions, filters) => {
           filters.subcategory &&
           transaction.subcategory.toLowerCase() !==
             filters.subcategory.toLowerCase()
-        ) {
+        )
           return false;
-        }
         if (
           filters.category &&
           transaction.category.toLowerCase() !== filters.category.toLowerCase()
-        ) {
+        )
           return false;
-        }
         if (
           filters.minAmount &&
           Number(transaction.amount) < Number(filters.minAmount)
-        ) {
+        )
           return false;
-        }
         if (
           filters.maxAmount &&
           Number(transaction.amount) > Number(filters.maxAmount)
-        ) {
+        )
           return false;
-        }
         return true;
       }
     );
@@ -68,10 +74,11 @@ const filterTransactions = (groupedTransactions, filters) => {
 
 const PaginatedTable = ({
   groupedTransactions,
+  groupedAllTransactions,
   handleRowClick,
-  itemsPerPage = 10,
   profile,
-  type,
+  itemsPerPage = 10,
+  selectedMonth,
 }) => {
   const { CURRENCY_SYMBOLS } = useContext(AuthContext);
 
@@ -84,12 +91,27 @@ const PaginatedTable = ({
     maxDate: "",
   });
   const [appliedFilters, setAppliedFilters] = useState(null);
-
-  //pagination pages
   const [currentPage, setCurrentPage] = useState(1);
 
-  // filter and pagination for only trans table
-  const showFilters = type === "trans";
+  let futureRecurGroupedTransactions = {};
+  const today = new Date();
+  const currentMonthStr = today.toISOString().slice(0, 7);
+  const allTransactions = Object.values(groupedAllTransactions).flat();
+  allTransactions.forEach((transaction) => {
+    if (transaction.recurring && transaction.nextOccur) {
+      if (transaction.nextOccur.startsWith(currentMonthStr)) {
+        const nextOccurDate = new Date(transaction.nextOccur);
+        if (nextOccurDate <= today) return;
+        if (!futureRecurGroupedTransactions[transaction.nextOccur]) {
+          futureRecurGroupedTransactions[transaction.nextOccur] = [];
+        }
+        futureRecurGroupedTransactions[transaction.nextOccur].push(transaction);
+      }
+    }
+  });
+  const flattenedRowsRecur = flattenTransactions(
+    futureRecurGroupedTransactions
+  );
 
   const handleApplyFilters = () => {
     const filteredData = filterTransactions(groupedTransactions, filters);
@@ -110,157 +132,83 @@ const PaginatedTable = ({
     setCurrentPage(1);
   };
 
-  //upcoming recurring trans this month
-  if (type === "recur") {
-    let futureRecurGroupedTransactions = {};
-    const today = new Date();
-    const currentMonthStr = today.toISOString().slice(0, 7);
+  const dataToPaginate = appliedFilters ? appliedFilters : groupedTransactions;
+  const flattenedRows = flattenTransactions(dataToPaginate);
+  const totalPages = Math.ceil(flattenedRows.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const currentRows = flattenedRows.slice(
+    startIndex,
+    startIndex + itemsPerPage
+  );
 
-    const allTransactions = Object.values(groupedTransactions).flat();
-    allTransactions.forEach((transaction) => {
-      if (transaction.recurring && transaction.nextOccur) {
-        if (transaction.nextOccur.startsWith(currentMonthStr)) {
-          const nextOccurDate = new Date(transaction.nextOccur);
-          if (nextOccurDate <= today) return;
-          if (!futureRecurGroupedTransactions[transaction.nextOccur]) {
-            futureRecurGroupedTransactions[transaction.nextOccur] = [];
-          }
-          futureRecurGroupedTransactions[transaction.nextOccur].push(
-            transaction
-          );
-        }
-      }
-    });
-    const flattenedRows = flattenTransactions(futureRecurGroupedTransactions);
-    return (
-      <div>
-        <h3>Upcoming Recurring Transactions:</h3>
-        <table border="1" style={{ backgroundColor: "#FBE29F" }}>
-          <thead>
-            <tr>
-              <th width="120">Date</th>
-              <th>Category</th>
-              <th>Note</th>
-              <th>Amount</th>
-            </tr>
-          </thead>
-          <tbody>
-            {flattenedRows.map((row) => {
-              if (row.type === "header") {
-                return (
-                  <tr
-                    key={`header-${row.date}`}
-                    style={{ backgroundColor: "#FBE29F", fontWeight: "bold" }}
-                  >
-                    <td colSpan="4">{row.date}</td>
-                  </tr>
-                );
-              } else {
-                const transaction = row.transaction;
-                return (
-                  <tr
-                    key={transaction.id}
-                    onClick={() => handleRowClick(transaction)}
-                    style={{ cursor: "pointer" }}
-                  >
-                    <td></td>
-                    <td
-                      style={{ color: getCategoryColor(transaction.category) }}
-                    >
-                      {transaction.subcategory.replace("_", " ")}
-                    </td>
-                    <td>{transaction.note || ""}</td>
-                    <td
-                      style={{ color: getCategoryColor(transaction.category) }}
-                    >
-                      {transaction.category === "expense"
-                        ? "-"
-                        : transaction.category === "income"
-                        ? "+"
-                        : ""}
-                      {transaction.amount % 1 === 0
-                        ? transaction.amount
-                        : Number(transaction.amount).toFixed(2)}{" "}
-                      {profile ? CURRENCY_SYMBOLS[profile.currency] : ""}
-                    </td>
-                  </tr>
-                );
+  return (
+    <div className="container-fluid">
+      {/* filter */}
+      <Card
+        style={{
+          backgroundColor: "#E9E9DF",
+          padding: "20px",
+          borderRadius: "8px",
+        }}
+      >
+        <div className="row mb-2">
+          <div className="col-md-3 mb-2">
+            <select
+              value={filters.category}
+              onChange={(e) =>
+                setFilters({ ...filters, category: e.target.value })
               }
-            })}
-          </tbody>
-        </table>
-      </div>
-    );
-  } else {
-    const dataToPaginate = appliedFilters
-      ? appliedFilters
-      : groupedTransactions;
-    const flattenedRows = flattenTransactions(dataToPaginate);
-    const totalPages = Math.ceil(flattenedRows.length / itemsPerPage);
-    const startIndex = (currentPage - 1) * itemsPerPage;
-    const currentRows = flattenedRows.slice(
-      startIndex,
-      startIndex + itemsPerPage
-    );
-
-    return (
-      <div>
-        {showFilters && (
-          <div style={{ marginBottom: "20px" }}>
-            <div>
-              <select
-                value={filters.category}
-                onChange={(e) =>
-                  setFilters({ ...filters, category: e.target.value })
-                }
-                style={{ marginRight: "10px" }}
-              >
-                <option value="">All</option>
-                <option value="income">Income</option>
-                <option value="expense">Expense</option>
-                <option value="savings_investment">Savings/Investment</option>
-              </select>
-              <select
-                value={filters.subcategory}
-                onChange={(e) =>
-                  setFilters({ ...filters, subcategory: e.target.value })
-                }
-                style={{ marginRight: "10px" }}
-              >
-                <option value="">Select Category</option>
-                <optgroup label="Income">
-                  <option value="salary">Salary</option>
-                  <option value="allowance">Allowance</option>
-                  <option value="investment_gain">Investment Gain</option>
-                  <option value="stipend">Stipend</option>
-                  <option value="sale_proceeds">Sale Proceeds</option>
-                  <option value="dividend">Dividend</option>
-                  <option value="other">Other</option>
-                </optgroup>
-                <optgroup label="Expense">
-                  <option value="grocery">Grocery</option>
-                  <option value="restaurant">Restaurant</option>
-                  <option value="entertainment">Entertainment</option>
-                  <option value="healthcare">Healthcare</option>
-                  <option value="utility">Utility</option>
-                  <option value="subscription">Subscription</option>
-                  <option value="gift">Gift</option>
-                  <option value="self_care">Self Care</option>
-                  <option value="housing">Housing</option>
-                  <option value="clothes">Clothes</option>
-                  <option value="miscellaneous">Miscellaneous</option>
-                </optgroup>
-                <optgroup label="Investment/Savings">
-                  <option value="">Select Investment Category</option>
-                  <option value="stock">Stock</option>
-                  <option value="bond">Bond</option>
-                  <option value="crypto">Crypto</option>
-                  <option value="fund">Fund</option>
-                  <option value="real_estate">Real Estate</option>
-                  <option value="savings">Savings</option>
-                </optgroup>
-              </select>
-            </div>
+              className="form-select"
+            >
+              <option value="">All</option>
+              <option value="income">Income</option>
+              <option value="expense">Expense</option>
+              <option value="savings_investment">Savings/Investment</option>
+            </select>
+          </div>
+          <div className="col-md-3 mb-2">
+            <select
+              value={filters.subcategory}
+              onChange={(e) =>
+                setFilters({ ...filters, subcategory: e.target.value })
+              }
+              className="form-select"
+            >
+              <option value="">Select Category</option>
+              <optgroup label="Income">
+                <option value="salary">Salary</option>
+                <option value="allowance">Allowance</option>
+                <option value="investment_gain">Investment Gain</option>
+                <option value="stipend">Stipend</option>
+                <option value="sale_proceeds">Sale Proceeds</option>
+                <option value="dividend">Dividend</option>
+                <option value="other">Other</option>
+              </optgroup>
+              <optgroup label="Expense">
+                <option value="grocery">Grocery</option>
+                <option value="restaurant">Restaurant</option>
+                <option value="entertainment">Entertainment</option>
+                <option value="healthcare">Healthcare</option>
+                <option value="utility">Utility</option>
+                <option value="subscription">Subscription</option>
+                <option value="gift">Gift</option>
+                <option value="self_care">Self Care</option>
+                <option value="housing">Housing</option>
+                <option value="clothes">Clothes</option>
+                <option value="miscellaneous">Miscellaneous</option>
+              </optgroup>
+              <optgroup label="Investment/Savings">
+                <option value="">Select Investment Category</option>
+                <option value="stock">Stock</option>
+                <option value="bond">Bond</option>
+                <option value="crypto">Crypto</option>
+                <option value="fund">Fund</option>
+                <option value="real_estate">Real Estate</option>
+                <option value="savings">Savings</option>
+              </optgroup>
+            </select>
+          </div>
+          <div className="col-md-3 mb-2">
             <input
               type="number"
               placeholder="Min Amount"
@@ -268,8 +216,10 @@ const PaginatedTable = ({
               onChange={(e) =>
                 setFilters({ ...filters, minAmount: e.target.value })
               }
-              style={{ marginRight: "10px" }}
+              className="form-control"
             />
+          </div>
+          <div className="col-md-3 mb-2">
             <input
               type="number"
               placeholder="Max Amount"
@@ -277,39 +227,76 @@ const PaginatedTable = ({
               onChange={(e) =>
                 setFilters({ ...filters, maxAmount: e.target.value })
               }
-              style={{ marginRight: "10px" }}
+              className="form-control"
             />
+          </div>
+        </div>
+
+        <div className="row align-items-end">
+          <div className="col-md-3 mb-2">
+            <label htmlFor="minDate" className="ms-2">
+              From:{" "}
+            </label>
             <input
+              id="minDate"
               type="date"
-              placeholder="Min Date"
               value={filters.minDate}
               onChange={(e) =>
                 setFilters({ ...filters, minDate: e.target.value })
               }
-              style={{ marginRight: "10px" }}
+              className="form-control"
             />
+          </div>
+          <div className="col-md-3 mb-2">
+            <label htmlFor="maxDate" className="ms-2">
+              Until:{" "}
+            </label>
             <input
+              id="maxDate"
               type="date"
-              placeholder="Max Date"
               value={filters.maxDate}
               onChange={(e) =>
                 setFilters({ ...filters, maxDate: e.target.value })
               }
-              style={{ marginRight: "10px" }}
+              className="form-control"
             />
-            <button onClick={handleApplyFilters}>Apply Filters</button>
-            <button onClick={handleResetFilters} style={{ marginLeft: "10px" }}>
-              Reset Filters
+          </div>
+          <div className="col-md-3 mb-2">
+            <button
+              onClick={handleApplyFilters}
+              className="btn w-100"
+              style={{
+                backgroundColor: "#A5BB9F",
+                color: "black",
+                border: "none",
+              }}
+            >
+              Search
             </button>
           </div>
-        )}
-        <table border="1">
+          <div className="col-md-3 mb-2">
+            <button
+              onClick={handleResetFilters}
+              className="btn btn-outline-secondary w-100"
+            >
+              Clear All
+            </button>
+          </div>
+        </div>
+      </Card>
+
+      <div className="row justify-content-center" style={{ marginTop: "30px" }}>
+        {/* Transactions */}
+        <table
+          className="table table-bordered table-hover"
+          style={{ width: "80%" }}
+        >
           <thead>
-            <tr>
-              <th width="120">Date</th>
-              <th>Category</th>
-              <th>Note</th>
-              <th>Amount</th>
+            <tr style={{ backgroundColor: "#D9C9B3" }}>
+              <th style={{ width: "120px" }}>Date</th>
+              <th style={{ width: "20%" }}>Category</th>
+              <th style={{ width: "45%" }}>Note</th>
+              <th style={{ width: "120px" }}>Amount</th>
             </tr>
           </thead>
           <tbody>
@@ -318,7 +305,7 @@ const PaginatedTable = ({
                 return (
                   <tr
                     key={`header-${row.date}`}
-                    style={{ backgroundColor: "#f0f0f0", fontWeight: "bold" }}
+                    style={{ backgroundColor: "#E9E9DF", fontWeight: "bold" }}
                   >
                     <td colSpan="4">{row.date}</td>
                   </tr>
@@ -332,7 +319,7 @@ const PaginatedTable = ({
                     style={{
                       cursor: "pointer",
                       backgroundColor: transaction.recurring
-                        ? "#FBE29F"
+                        ? "#E9E9DF"
                         : "inherit",
                     }}
                   >
@@ -362,20 +349,16 @@ const PaginatedTable = ({
             })}
           </tbody>
         </table>
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "center",
-            marginTop: "10px",
-          }}
-        >
+
+        <div className="d-flex justify-content-center mt-3 align-items-center">
           <button
             onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
             disabled={currentPage === 1}
+            className="btn btn-outline-secondary me-3"
           >
-            Prev
+            &larr;
           </button>
-          <span style={{ margin: "0 10px" }}>
+          <span className="mx-2">
             Page {currentPage} of {totalPages}
           </span>
           <button
@@ -383,13 +366,87 @@ const PaginatedTable = ({
               setCurrentPage((prev) => Math.min(prev + 1, totalPages))
             }
             disabled={currentPage === totalPages}
+            className="btn btn-outline-secondary ms-3"
           >
-            Next
+            &rarr;
           </button>
         </div>
       </div>
-    );
-  }
+
+      {/* recurring */}
+      {selectedMonth === currentMonthStr && (
+        <div className="my-4">
+          <h3 className="mb-3">
+            <strong>Upcoming Recurring Transactions:</strong>
+          </h3>
+          <div className="row justify-content-center">
+            <table
+              className="table table-bordered table-hover"
+              style={{ width: "80%", backgroundColor: "#FBE29F" }}
+            >
+              <thead>
+                <tr className="custom-header">
+                  <th style={{ width: "120px" }}>Date</th>
+                  <th style={{ width: "20%" }}>Category</th>
+                  <th style={{ width: "45%" }}>Note</th>
+                  <th style={{ width: "120px" }}>Amount</th>
+                </tr>
+              </thead>
+
+              <tbody>
+                {flattenedRowsRecur.map((row) => {
+                  if (row.type === "header") {
+                    return (
+                      <tr
+                        key={`header-${row.date}`}
+                        className="bg-warning fw-bold"
+                      >
+                        <td colSpan="4">{row.date}</td>
+                      </tr>
+                    );
+                  } else {
+                    const transaction = row.transaction;
+                    return (
+                      <tr
+                        key={transaction.id}
+                        onClick={() => handleRowClick(transaction)}
+                        style={{ cursor: "pointer" }}
+                      >
+                        <td></td>
+                        <td
+                          style={{
+                            color: getCategoryColor(transaction.category),
+                          }}
+                        >
+                          {transaction.subcategory.replace("_", " ")}
+                        </td>
+                        <td>{transaction.note || ""}</td>
+                        <td
+                          style={{
+                            color: getCategoryColor(transaction.category),
+                          }}
+                        >
+                          {transaction.category === "expense"
+                            ? "-"
+                            : transaction.category === "income"
+                            ? "+"
+                            : ""}
+                          {transaction.amount % 1 === 0
+                            ? transaction.amount
+                            : Number(transaction.amount).toFixed(2)}{" "}
+                          {profile ? CURRENCY_SYMBOLS[profile.currency] : ""}
+                        </td>
+                      </tr>
+                    );
+                  }
+                })}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+    </div>
+  );
 };
 
 export default PaginatedTable;

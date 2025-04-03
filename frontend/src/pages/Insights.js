@@ -5,6 +5,7 @@ import AuthContext from "../context/AuthContext";
 import Header from "../components/Header";
 import "../index.css";
 import FetchContext from "../context/FetchContext";
+import { Container, Row, Col, Card, Form, Button } from "react-bootstrap";
 
 const Insights = () => {
   const { user, CURRENCY_SYMBOLS } = useContext(AuthContext);
@@ -50,60 +51,74 @@ const Insights = () => {
     : null;
 
   return (
-    <div>
-      <div>{authMessage && <p style={{ color: "red" }}>{authMessage}</p>}</div>
+    <div
+      style={{
+        minHeight: "100vh",
+        backgroundColor: "#fff",
+        fontFamily: "monospace",
+      }}
+    >
       <Header />
-      <h2>Financial Insights</h2>
+      <Container className="py-5">
+        {authMessage && <div className="alert alert-danger">{authMessage}</div>}
 
-      {/* expense exceeds spending goal  */}
-      {profile && summary.total_expense > profile.monthly_spending_goal && (
-        <p>
-          You exceeded your monthly spending goal by{" "}
-          {summary.total_expense - profile.monthly_spending_goal}
-          {CURRENCY_SYMBOLS[profile.currency]}{" "}
-        </p>
-      )}
+        <h3 className="text-center mb-4" style={{ color: "black" }}>
+          Financial Insights
+        </h3>
 
-      {/* when savings portion is below the desired percentage */}
-      {profile && summary.total_investment < invest_goal_amount && (
-        <p>
-          You invested {summary.total_investment}
-          {CURRENCY_SYMBOLS[profile.currency]} this month which is less than
-          your goal.
-        </p>
-      )}
-
-      {/* spending more than average on a subcategory  */}
-      <div>
-        {pieData &&
-          pieData.map((item, index) => {
-            const avgItem =
-              avg && avg.find((a) => a.subcategory === item.subcategory);
-            if (
-              item.category === "expense" &&
-              avgItem &&
-              item.total_amount > avgItem.average
-            ) {
-              return (
-                <p key={index}>
-                  This month's spending for <strong>{item.subcategory}</strong>{" "}
-                  is{" "}
-                  <strong>
-                    {item.total_amount}
-                    {CURRENCY_SYMBOLS[profile.currency]}
-                  </strong>
-                  , which is more than your average spending of{" "}
-                  <strong>
-                    {avgItem.average}
-                    {CURRENCY_SYMBOLS[profile.currency]}
-                  </strong>
-                  .
+        <Card
+          className="mb-4"
+          style={{ border: "none", borderRadius: "8px", overflow: "hidden" }}
+        >
+          <Card.Body style={{ backgroundColor: "#E9E9DF", color: "black" }}>
+            {profile &&
+              summary.total_expense > profile.monthly_spending_goal && (
+                <p>
+                  You exceeded your monthly spending goal by{" "}
+                  {summary.total_expense - profile.monthly_spending_goal}
+                  {CURRENCY_SYMBOLS[profile.currency]}.
                 </p>
-              );
-            }
-            return null;
-          })}
-      </div>
+              )}
+            {profile && summary.total_investment < invest_goal_amount && (
+              <p>
+                You invested {summary.total_investment}
+                {CURRENCY_SYMBOLS[profile.currency]} this month which is less
+                than your goal.
+              </p>
+            )}
+            <div>
+              {pieData &&
+                pieData.map((item, index) => {
+                  const avgItem =
+                    avg && avg.find((a) => a.subcategory === item.subcategory);
+                  if (
+                    item.category === "expense" &&
+                    avgItem &&
+                    item.total_amount > avgItem.average
+                  ) {
+                    return (
+                      <p key={index}>
+                        This month's spending for{" "}
+                        <strong>{item.subcategory}</strong> is{" "}
+                        <strong>
+                          {item.total_amount}
+                          {CURRENCY_SYMBOLS[profile.currency]}
+                        </strong>
+                        , which is more than your average spending of{" "}
+                        <strong>
+                          {avgItem.average}
+                          {CURRENCY_SYMBOLS[profile.currency]}
+                        </strong>
+                        .
+                      </p>
+                    );
+                  }
+                  return null;
+                })}
+            </div>
+          </Card.Body>
+        </Card>
+      </Container>
     </div>
   );
 };

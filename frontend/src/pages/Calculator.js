@@ -9,7 +9,6 @@ const Calculator = ({ onResult, onClose }) => {
       setDisplay("");
     } else if (value === "=") {
       try {
-        // Using mathjs evaluate for safety; eval was used in your snippet, but let's keep it safer
         const result = evaluate(display);
         setDisplay(result.toString());
         onResult(result);
@@ -21,7 +20,6 @@ const Calculator = ({ onResult, onClose }) => {
     }
   };
 
-  // Note the explicit type="button" for each button
   const buttons = [
     "7",
     "8",
@@ -42,33 +40,35 @@ const Calculator = ({ onResult, onClose }) => {
   ];
 
   return (
-    <div
-      style={{ border: "1px solid #ccc", padding: "10px", marginTop: "10px" }}
-    >
-      <div style={{ marginBottom: "10px" }}>
-        <input
-          type="text"
-          value={display}
-          readOnly
-          style={{ width: "100%", textAlign: "right" }}
-        />
+    <div className="card mt-2" style={{ width: "300px", height: "300px" }}>
+      <div className="card-body d-flex flex-column justify-content-between">
+        <div className="mb-2">
+          <input
+            type="text"
+            value={display}
+            readOnly
+            className="form-control text-end"
+          />
+        </div>
+        <div className="d-flex flex-wrap">
+          {buttons.map((btn) => (
+            <button
+              key={btn}
+              type="button"
+              onClick={() => handleButtonClick(btn)}
+              className="btn m-1"
+              style={{
+                flex: "1 0 21%",
+                padding: "10px",
+                backgroundColor: "#D9C9B3",
+                borderColor: "#D9C9B3",
+              }}
+            >
+              {btn}
+            </button>
+          ))}
+        </div>
       </div>
-      <div style={{ display: "flex", flexWrap: "wrap" }}>
-        {buttons.map((btn) => (
-          <button
-            key={btn}
-            type="button"
-            onClick={() => handleButtonClick(btn)}
-            style={{ flex: "1 0 21%", margin: "5px", padding: "10px" }}
-          >
-            {btn}
-          </button>
-        ))}
-      </div>
-      {/* The close button also needs type="button" so it doesn't submit the form */}
-      <button type="button" onClick={onClose} style={{ marginTop: "10px" }}>
-        Close Calculator
-      </button>
     </div>
   );
 };

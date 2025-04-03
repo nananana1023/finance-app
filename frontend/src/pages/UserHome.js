@@ -21,6 +21,15 @@ import Header from "../components/Header";
 import MonthContext from "../context/MonthContext";
 import PieChartContainer from "./PieChart";
 import FetchContext from "../context/FetchContext";
+import {
+  Container,
+  Row,
+  Col,
+  Card,
+  Form,
+  Button,
+  InputGroup,
+} from "react-bootstrap";
 
 const UserHome = () => {
   const { user, CURRENCY_SYMBOLS } = useContext(AuthContext);
@@ -81,88 +90,112 @@ const UserHome = () => {
   };
 
   return (
-    <div>
+    <div
+      style={{
+        minHeight: "100vh",
+        backgroundColor: "#fff",
+        fontFamily: "monospace",
+      }}
+    >
+      {/* Header */}
       <Header />
-      <div className="success-container">
-        <p>{location.state?.message || null}</p>
-      </div>
 
-      {/* line chart - expenses over months */}
+      {/* Success Message */}
+      {location.state?.message && (
+        <Row className="mb-4">
+          <Col>
+            <div className="alert alert-success" role="alert">
+              {location.state?.message || null}
+            </div>
+          </Col>
+        </Row>
+      )}
 
-      <div style={{ marginLeft: 70 }}>
-        <h3>Total Spent</h3>
-        <ResponsiveContainer width="80%" height={400}>
-          <LineChart
-            data={total_expenses}
-            margin={{ top: 20, right: 30, left: 60, bottom: 50 }}
-          >
-            <XAxis
-              dataKey="month_name"
-              padding={{ left: 50, right: 50 }}
-              tick={<CustomXAxisTick data={total_expenses} fill="#6CA0DC" />}
-              stroke="grey"
-            />
-            <YAxis hide />
-            <ReferenceLine
-              y={profile?.monthly_spending_goal}
-              stroke="#FF6961"
-              label={({ viewBox }) => {
-                const { x, y } = viewBox;
-                return (
-                  <text x={x} y={y - 10} textAnchor="middle" fill="#FF6961">
-                    {profile?.monthly_spending_goal}
-                    {CURRENCY_SYMBOLS[profile?.currency] || profile?.currency}
-                  </text>
-                );
-              }}
-            />
-
-            <Line
-              type="linear"
-              dataKey="amount"
-              stroke="#6CA0DC"
-              activeDot={{ r: 8 }}
+      {/* Line Chart: Total Spent */}
+      <Row className="my-4">
+        <Col md={{ span: 8, offset: 2 }}>
+          <h3 className="text-center">
+            <strong>Total Spent</strong>
+          </h3>
+          <ResponsiveContainer width="100%" height={400}>
+            <LineChart
+              data={total_expenses}
+              margin={{ top: 20, right: 30, left: 60, bottom: 50 }}
             >
-              <LabelList
-                dataKey="amount"
-                position="top"
-                formatter={(value) =>
-                  `${value}${
-                    CURRENCY_SYMBOLS[profile?.currency] || profile?.currency
-                  }`
-                }
+              <XAxis
+                dataKey="month_name"
+                padding={{ left: 50, right: 50 }}
+                tick={<CustomXAxisTick data={total_expenses} fill="#6CA0DC" />}
+                stroke="grey"
               />
-            </Line>
-          </LineChart>
-        </ResponsiveContainer>
-      </div>
+              <YAxis hide />
+              <ReferenceLine
+                y={profile?.monthly_spending_goal}
+                stroke="#FF6961"
+                label={({ viewBox }) => {
+                  const { x, y } = viewBox;
+                  return (
+                    <text x={x} y={y - 10} textAnchor="middle" fill="#FF6961">
+                      {(profile?.monthly_spending_goal).toFixed(2)}
+                      {CURRENCY_SYMBOLS[profile?.currency] || profile?.currency}
+                    </text>
+                  );
+                }}
+              />
+              <Line
+                type="linear"
+                dataKey="amount"
+                stroke="#6CA0DC"
+                activeDot={{ r: 8 }}
+              >
+                <LabelList
+                  dataKey="amount"
+                  position="top"
+                  formatter={(value) =>
+                    `${value}${
+                      CURRENCY_SYMBOLS[profile?.currency] || profile?.currency
+                    }`
+                  }
+                />
+              </Line>
+            </LineChart>
+          </ResponsiveContainer>
+        </Col>
+      </Row>
 
-      {/* select month  */}
+      {/* Month Selector */}
+      <Row className="my-4 justify-content-center">
+        <Col xs="auto">
+          <InputGroup style={{ maxWidth: "300px" }}>
+            <Button variant="outline-secondary" onClick={handlePrevMonth}>
+              &lt;
+            </Button>
+            <Form.Control
+              type="month"
+              value={selectedMonth}
+              onChange={(e) => setSelectedMonth(e.target.value)}
+            />
+            <Button variant="outline-secondary" onClick={handleNextMonth}>
+              &gt;
+            </Button>
+          </InputGroup>
+        </Col>
+      </Row>
 
-      <div style={{ marginLeft: 70, display: "flex", alignItems: "center" }}>
-        <button onClick={handlePrevMonth}>{"<"}</button>
-        <input
-          type="month"
-          value={selectedMonth}
-          onChange={(e) => setSelectedMonth(e.target.value)}
-          style={{ margin: "0 10px" }}
-        />
-        <button onClick={handleNextMonth}>{">"}</button>
-      </div>
+      <Row>
+        <Col>
+          <div style={{ marginTop: "20px" }}></div>
+        </Col>
+      </Row>
 
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "space-around",
-          alignItems: "flex-start",
-          marginLeft: 70,
-        }}
-      >
-        {/* Bar */}
-        <div style={{ width: "50%" }}>
-          <h3>Cashflow</h3>
+      <Row className="my-4 mx-5">
+        {/* Cashflow Bar Chart */}
+        <Col md={6}>
+          <h3 className="text-center">
+            <strong>Cash Flow</strong>
+          </h3>
           {!isDataEmpty ? (
-            <ResponsiveContainer width="80%" height={400}>
+            <ResponsiveContainer width="100%" height={400}>
               <BarChart
                 data={data}
                 margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
@@ -186,18 +219,22 @@ const UserHome = () => {
               </BarChart>
             </ResponsiveContainer>
           ) : (
-            <p>No transactions recorded for this month.</p>
+            <p className="text-center">
+              No transactions recorded for this month.
+            </p>
           )}
-        </div>
+        </Col>
 
-        {/* Pie */}
-        <div style={{ width: "50%" }}>
-          <h3>Transactions by Categories</h3>
-          <div>
+        {/* Pie Chart */}
+        <Col md={6}>
+          <h3 className="text-center">
+            <strong>Transactions by Categories</strong>
+          </h3>
+          <div className="d-flex justify-content-center">
             <PieChartContainer data={pieData} />
           </div>
-        </div>
-      </div>
+        </Col>
+      </Row>
     </div>
   );
 };

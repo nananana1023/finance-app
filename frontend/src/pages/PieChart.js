@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { PieChart, Pie, Tooltip, Legend, Cell } from "recharts";
+import { Container, Row, Col, Form } from "react-bootstrap";
 
 const COLORS = [
   "#9BBFE0",
@@ -26,53 +27,73 @@ function PieChartContainer({ data }) {
   );
 
   return (
-    <div>
+    <Container className="my-4">
       {/* Dropdown */}
-      <div style={{ marginBottom: "1rem" }}>
-        <label htmlFor="category-select">Select Category: </label>
-        <select
-          id="category-select"
-          value={selectedCategory}
-          onChange={handleCategoryChange}
-        >
-          <option value="expense">Expense</option>
-          <option value="income">Income</option>
-          <option value="savings_investment">Savings & Investment</option>
-        </select>
-      </div>
+      <Row className="mb-4">
+        <Col md={4}>
+          <Form.Group controlId="category-select">
+            <Form.Select
+              value={selectedCategory}
+              onChange={handleCategoryChange}
+              style={{ width: "230px" }}
+            >
+              <option value="expense">Expense</option>
+              <option value="income">Income</option>
+              <option value="savings_investment">Savings & Investment</option>
+            </Form.Select>
+          </Form.Group>
+        </Col>
+      </Row>
 
-      <PieChart width={400} height={400}>
-        <Pie
-          data={filteredData}
-          dataKey="total_amount"
-          nameKey="subcategory"
-          cx="50%"
-          cy="50%"
-          outerRadius={120}
-        >
-          {filteredData.map((entry, index) => (
-            <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-          ))}
-        </Pie>
-        <Tooltip />
-        <Legend
-          layout="vertical"
-          verticalAlign="middle"
-          align="right"
-          wrapperStyle={{
-            position: "absolute",
-            top: "50%",
-            left: "420px",
-            transform: "translateY(-50%)",
-            width: "150px",
-          }}
-          formatter={(value, entry) => {
-            const { total_amount } = entry.payload;
-            return `${value}: ${total_amount}`;
-          }}
-        />
-      </PieChart>
-    </div>
+      {/* Pie Chart */}
+      <Row>
+        <Col md={8}>
+          <div
+            style={{
+              position: "relative",
+              width: "400px",
+              height: "400px",
+              marginLeft: 0,
+            }}
+          >
+            <PieChart width={500} height={400}>
+              <Pie
+                data={filteredData}
+                dataKey="total_amount"
+                nameKey="subcategory"
+                cx="50%"
+                cy="50%"
+                outerRadius={120}
+              >
+                {filteredData.map((entry, index) => (
+                  <Cell
+                    key={`cell-${index}`}
+                    fill={COLORS[index % COLORS.length]}
+                  />
+                ))}
+              </Pie>
+              <Tooltip />
+              <Legend
+                layout="vertical"
+                verticalAlign="middle"
+                align="right"
+                wrapperStyle={{
+                  position: "absolute",
+                  top: "50%",
+                  left: "300px",
+                  transform: "translateY(-50%)",
+                  width: "250px",
+                }}
+                formatter={(value, entry) => {
+                  const { total_amount } = entry.payload;
+                  return `${value}: ${total_amount}`;
+                }}
+              />
+            </PieChart>
+          </div>
+        </Col>
+      </Row>
+    </Container>
   );
 }
 

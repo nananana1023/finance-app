@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import axios from "axios";
+import { Row, Col } from "react-bootstrap";
 
 const FileUpload = () => {
   const [file, setFile] = useState(null);
@@ -14,7 +15,6 @@ const FileUpload = () => {
     const formData = new FormData();
     formData.append("file", file);
 
-    // Retrieve your token if needed
     const token = localStorage.getItem("accessToken");
 
     try {
@@ -24,7 +24,6 @@ const FileUpload = () => {
         {
           headers: {
             Authorization: `Bearer ${token}`,
-            // Do not include the "Content-Type" header here.
           },
         }
       );
@@ -38,10 +37,32 @@ const FileUpload = () => {
   };
 
   return (
-    <div>
-      <input type="file" accept=".xls,.xlsx" onChange={handleFileChange} />
-      <button onClick={handleUpload}>Upload Transactions</button>
-      {message && <p>{message}</p>}
+    <div className="mb-3">
+      <Row className="align-items-center">
+        <Col xs="auto">
+          <input
+            type="file"
+            className="form-control w-auto"
+            id="transactionsFile"
+            accept=".xls,.xlsx"
+            onChange={handleFileChange}
+          />
+        </Col>
+        <Col xs="auto">
+          <button
+            className="btn btn-animate"
+            style={{
+              backgroundColor: "#D9C9B3",
+              color: "black",
+              border: "none",
+            }}
+            onClick={handleUpload}
+          >
+            Upload
+          </button>
+        </Col>
+      </Row>
+      {message && <p className="mt-3">{message}</p>}
     </div>
   );
 };

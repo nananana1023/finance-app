@@ -4,6 +4,7 @@ import AuthContext from "../context/AuthContext";
 import { useEffect, useState, useContext } from "react";
 import axios from "axios";
 import { useLocation } from "react-router-dom";
+import { Container, Row, Col, Card, Form, Button } from "react-bootstrap";
 
 const Profile = () => {
   const { CURRENCY_SYMBOLS, user, logoutUser } = useContext(AuthContext);
@@ -134,138 +135,233 @@ const Profile = () => {
   if (error) return <p style={{ color: "red" }}>{error}</p>;
 
   return (
-    <div>
+    <div
+      style={{
+        minHeight: "100vh",
+        backgroundColor: "#fff",
+        fontFamily: "Monospace",
+      }}
+    >
       <Header />
-      <h2>👋 Hello, {profile ? profile.first_name : ""}!</h2>
+      <Container className="py-5">
+        <Row className="justify-content-center">
+          <Col md={8}>
+            <h3 className="text-center mb-4" style={{ color: "black" }}>
+              Hello, {profile ? profile.first_name : ""}!
+            </h3>
 
-      {successMessage && (
-        <p
-          style={{
-            color: "green",
-            background: "#d4edda",
-            padding: "10px",
-            borderRadius: "5px",
-          }}
-        >
-          {successMessage}
-        </p>
-      )}
+            {successMessage && (
+              <div className="alert alert-success" role="alert">
+                {successMessage}
+              </div>
+            )}
 
-      {/* Menu Section */}
-      <div className="profile-menu" style={{ marginBottom: "20px" }}>
-        <button
-          onClick={() => setActiveMenu("user")}
-          style={{
-            fontWeight: activeMenu === "user" ? "bold" : "normal",
-            marginRight: "10px",
-          }}
-        >
-          User Profile
-        </button>
-        <button
-          onClick={() => setActiveMenu("financial")}
-          style={{ fontWeight: activeMenu === "financial" ? "bold" : "normal" }}
-        >
-          Financial Profile
-        </button>
-      </div>
-      {activeMenu === "user" && (
-        <div className="user-profile">
-          <h3>User Profile Details</h3>
-          <p>
-            <strong>Username:</strong> {user ? user.username : "N/A"}
-          </p>
-          <p>
-            <strong>Country:</strong> {profile ? profile.country : "N/A"}
-          </p>
-          <p>
-            <strong>Default Currency:</strong> {profile?.currency}
-          </p>
-          <button onClick={() => navigate("/change-password")}>
-            Change Password
-          </button>
-          <button onClick={() => navigate("/change-username")}>
-            Edit Username
-          </button>
-        </div>
-      )}
-
-      {activeMenu === "financial" && (
-        <div className="financial-profile">
-          <h3>Financial Profile Details</h3>
-          {isEditing ? (
-            <div>
-              {formError && <p style={{ color: "red" }}>{formError}</p>}
-              <label>
-                Monthly Income:
-                <div style={{ display: "flex", alignItems: "center" }}>
-                  <input
-                    type="number"
-                    name="monthly_income"
-                    value={updatedProfile.monthly_income}
-                    onChange={handleInputChange}
-                  />
-                  <span style={{ marginLeft: "5px" }}>
-                    {CURRENCY_SYMBOLS[profile.currency] || profile.currency}
-                  </span>
+            {formError && <div className="alert alert-danger">{formError}</div>}
+            <Card
+              className="mb-4"
+              style={{
+                border: "none",
+                borderRadius: "8px",
+                overflow: "hidden",
+              }}
+            >
+              <Card.Body style={{ backgroundColor: "#E9E9DF" }}>
+                <div className="d-flex justify-content-center mb-3">
+                  <button
+                    onClick={() => setActiveMenu("user")}
+                    style={{
+                      fontWeight: activeMenu === "user" ? "bold" : "normal",
+                      backgroundColor:
+                        activeMenu === "user" ? "#D9C9B3" : "#E9E9DF",
+                      color: "black",
+                      border: "1px solid #D9C9B3",
+                      borderRadius: "4px",
+                      padding: "8px 16px",
+                      marginRight: "10px",
+                      cursor: "pointer",
+                    }}
+                  >
+                    User Profile
+                  </button>
+                  <button
+                    onClick={() => setActiveMenu("financial")}
+                    style={{
+                      fontWeight:
+                        activeMenu === "financial" ? "bold" : "normal",
+                      backgroundColor:
+                        activeMenu === "financial" ? "#D9C9B3" : "#E9E9DF",
+                      color: "black",
+                      border: "1px solid #D9C9B3",
+                      borderRadius: "4px",
+                      padding: "8px 16px",
+                      cursor: "pointer",
+                    }}
+                  >
+                    Financial Profile
+                  </button>
                 </div>
-              </label>
-              <label>
-                Monthly Spending Goal:
-                <div style={{ display: "flex", alignItems: "center" }}>
-                  <input
-                    type="number"
-                    name="monthly_spending_goal"
-                    value={updatedProfile.monthly_spending_goal}
-                    onChange={handleInputChange}
-                  />
-                  <span style={{ marginLeft: "5px" }}>
-                    {CURRENCY_SYMBOLS[profile.currency] || profile.currency}
-                  </span>
-                </div>
-              </label>
-              <label>
-                Savings percentage:
-                <select
-                  name="savings_percent"
-                  value={updatedProfile.savings_percent}
-                  onChange={handleInputChange}
-                  required
-                >
-                  <option value="">Select Percentage</option>
-                  {["10%", "20%", "30%", "50%+"].map((choice) => (
-                    <option key={choice} value={choice}>
-                      {choice}
-                    </option>
-                  ))}
-                </select>
-              </label>
-              <button onClick={handleSave}>Save</button>
-              <button onClick={() => setIsEditing(false)}>Cancel</button>
+                {activeMenu === "user" && (
+                  <div>
+                    <p>
+                      <strong>Username:</strong> {user ? user.username : "N/A"}
+                    </p>
+                    <p>
+                      <strong>Country:</strong>{" "}
+                      {profile ? profile.country : "N/A"}
+                    </p>
+                    <p>
+                      <strong>Default Currency:</strong> {profile?.currency}
+                    </p>
+                    <div className="d-flex gap-2">
+                      <Button
+                        style={{
+                          backgroundColor: "#D9C9B3",
+                          color: "black",
+                          border: "none",
+                        }}
+                        className="btn-animate"
+                        onClick={() => navigate("/change-password")}
+                      >
+                        Change Password
+                      </Button>
+                      <Button
+                        style={{
+                          backgroundColor: "#D9C9B3",
+                          color: "black",
+                          border: "none",
+                        }}
+                        className="btn-animate"
+                        onClick={() => navigate("/change-username")}
+                      >
+                        Change Username
+                      </Button>
+                    </div>
+                  </div>
+                )}
+                {activeMenu === "financial" && (
+                  <div>
+                    {isEditing ? (
+                      <div>
+                        <Form.Group className="mb-3">
+                          <Form.Label>Monthly Income:</Form.Label>
+                          <div className="d-flex align-items-center">
+                            <Form.Control
+                              type="number"
+                              name="monthly_income"
+                              value={updatedProfile.monthly_income}
+                              onChange={handleInputChange}
+                            />
+                            <span className="ms-2">
+                              {CURRENCY_SYMBOLS[profile.currency] ||
+                                profile.currency}
+                            </span>
+                          </div>
+                        </Form.Group>
+                        <Form.Group className="mb-3">
+                          <Form.Label>Monthly Spending Goal:</Form.Label>
+                          <div className="d-flex align-items-center">
+                            <Form.Control
+                              type="number"
+                              name="monthly_spending_goal"
+                              value={updatedProfile.monthly_spending_goal}
+                              onChange={handleInputChange}
+                            />
+                            <span className="ms-2">
+                              {CURRENCY_SYMBOLS[profile.currency] ||
+                                profile.currency}
+                            </span>
+                          </div>
+                        </Form.Group>
+                        <Form.Group className="mb-3">
+                          <Form.Label>Savings Percentage:</Form.Label>
+                          <Form.Select
+                            name="savings_percent"
+                            value={updatedProfile.savings_percent}
+                            onChange={handleInputChange}
+                            required
+                          >
+                            <option value="">Select Percentage</option>
+                            {["10%", "20%", "30%", "50%+"].map((choice) => (
+                              <option key={choice} value={choice}>
+                                {choice}
+                              </option>
+                            ))}
+                          </Form.Select>
+                        </Form.Group>
+                        <div className="d-flex gap-2">
+                          <Button
+                            style={{
+                              backgroundColor: "#D9C9B3",
+                              color: "black",
+                              border: "none",
+                            }}
+                            className="btn-animate"
+                            onClick={handleSave}
+                          >
+                            Save
+                          </Button>
+                          <Button
+                            style={{
+                              backgroundColor: "#D9C9B3",
+                              color: "black",
+                              border: "none",
+                            }}
+                            className="btn-animate"
+                            onClick={() => setIsEditing(false)}
+                          >
+                            Cancel
+                          </Button>
+                        </div>
+                      </div>
+                    ) : (
+                      <div>
+                        <p>
+                          <strong>Monthly Income:</strong>{" "}
+                          {profile.monthly_income}
+                          {CURRENCY_SYMBOLS[profile.currency] ||
+                            profile.currency}
+                        </p>
+                        <p>
+                          <strong>Monthly Spending Goal:</strong>{" "}
+                          {profile.monthly_spending_goal}
+                          {CURRENCY_SYMBOLS[profile.currency] ||
+                            profile.currency}
+                        </p>
+                        <p>
+                          <strong>Savings Percentage:</strong>{" "}
+                          {profile.savings_percent}
+                        </p>
+                        <Button
+                          style={{
+                            backgroundColor: "#D9C9B3",
+                            color: "black",
+                            border: "none",
+                          }}
+                          className="btn-animate"
+                          onClick={handleEdit}
+                        >
+                          Edit
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </Card.Body>
+            </Card>
+            <div className="text-center">
+              <Button variant="outline-danger" onClick={handleLogout}>
+                Log Out
+              </Button>
             </div>
-          ) : (
-            <div>
-              <p>
-                <strong>Monthly Income:</strong> {profile.monthly_income}
-                {CURRENCY_SYMBOLS[profile.currency] || profile.currency}
-              </p>
-              <p>
-                <strong>Monthly Spending Goal:</strong>{" "}
-                {profile.monthly_spending_goal}
-                {CURRENCY_SYMBOLS[profile.currency] || profile.currency}
-              </p>
-              <p>
-                <strong>Savings percentage:</strong> {profile.savings_percent}
-              </p>
-              <button onClick={handleEdit}>Edit</button>
-            </div>
-          )}
-        </div>
-      )}
-
-      <button className="logout-button" onClick={handleLogout}>
-        Logout
-      </button>
+          </Col>
+        </Row>
+      </Container>
+      <style>{`
+        .btn-animate:hover {
+          transform: scale(1.05);
+          transition: transform 0.2s;
+        }
+      `}</style>
     </div>
   );
 };

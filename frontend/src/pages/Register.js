@@ -182,7 +182,8 @@ const Register = () => {
         >
           <h1 style={{ fontWeight: 700 }}>MoneySavvy</h1>
           <p>
-            Your smart finance manager. Track your transactions effortlessly.
+            <strong>MoneySavvy</strong> (adj.): Being aware and skilled at
+            managing money—knowing how to budget, save, and spend wisely.
           </p>
         </Col>
         <Col
@@ -245,48 +246,47 @@ const Register = () => {
                     </button>
                   </div>
                   {showPasswordValidation && (
-                    <ul style={{ listStyleType: "none", padding: 0 }}>
-                      <li
+                    <div className="password-validation">
+                      <p
                         style={{
                           color: passwordChecks.length ? "green" : "red",
                         }}
                       >
-                        {passwordChecks.length ? "✅" : "❌"} At least 8
+                        {passwordChecks.length ? "✓" : "✗"} At least 8
                         characters
-                      </li>
-                      <li
+                      </p>
+                      <p
                         style={{
                           color: passwordChecks.uppercase ? "green" : "red",
                         }}
                       >
-                        {passwordChecks.uppercase ? "✅" : "❌"} At least one
+                        {passwordChecks.uppercase ? "✓" : "✗"} Contains an
                         uppercase letter
-                      </li>
-                      <li
+                      </p>
+                      <p
                         style={{
                           color: passwordChecks.lowercase ? "green" : "red",
                         }}
                       >
-                        {passwordChecks.lowercase ? "✅" : "❌"} At least one
+                        {passwordChecks.lowercase ? "✓" : "✗"} Contains a
                         lowercase letter
-                      </li>
-                      <li
+                      </p>
+                      <p
                         style={{
                           color: passwordChecks.number ? "green" : "red",
                         }}
                       >
-                        {passwordChecks.number ? "✅" : "❌"} At least one
-                        number
-                      </li>
-                      <li
+                        {passwordChecks.number ? "✓" : "✗"} Contains a number
+                      </p>
+                      <p
                         style={{
                           color: passwordChecks.specialChar ? "green" : "red",
                         }}
                       >
-                        {passwordChecks.specialChar ? "✅" : "❌"} At least one
+                        {passwordChecks.specialChar ? "✓" : "✗"} Contains a
                         special character
-                      </li>
-                    </ul>
+                      </p>
+                    </div>
                   )}
                   <button
                     type="submit"

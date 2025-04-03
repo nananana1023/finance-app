@@ -1,36 +1,20 @@
-.header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 15px 30px;
-  background-color: #ffffff; /* white background */
-  border-bottom: 1px solid #e5e7eb; /* light gray border */
-  color: #333333; /* dark text */
+/* Apply a smooth transition for the nav links and brand image */
+.navbar-nav .nav-link,
+.navbar-brand {
+  transition: transform 0.3s ease, color 0.3s ease;
 }
 
-.header h1 {
-  margin: 0;
-  font-size: 24px;
+/* Slightly scale up and change color on hover for nav links */
+.navbar-nav .nav-link:hover {
+  transform: scale(1.05);
+  color: #ffffff; /* Change to a contrasting color if needed */
 }
 
-.header ul {
-  list-style: none;
-  display: flex;
-  gap: 20px;
-  padding: 0;
+/* Animate the brand image on hover (e.g., a gentle rotation) */
+.navbar-brand img {
+  transition: transform 0.3s ease;
 }
 
-.header li {
-  display: inline;
-}
-
-.header a {
-  color: #333333;
-  text-decoration: none;
-  font-weight: bold;
-  transition: color 0.3s;
-}
-
-.header a:hover {
-  color: #555555;
+.navbar-brand:hover img {
+  transform: rotate(360deg);
 }
