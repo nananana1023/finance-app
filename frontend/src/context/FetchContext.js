@@ -1,7 +1,7 @@
 import { createContext, useContext, useState } from "react";
-import axios from "axios";
 import MonthContext from "../context/MonthContext";
 import AuthContext from "../context/AuthContext";
+import api from "../utils/api";
 
 const FetchContext = createContext();
 
@@ -25,10 +25,7 @@ export const FetchProvider = ({ children }) => {
   const fetchSummary = async () => {
     const [year, month] = selectedMonth.split("-");
     try {
-      const response = await axios.get(
-        `http://127.0.0.1:8000/api/monthly-summary/${year}/${month}/`,
-        { headers }
-      );
+      const response = await api.get(`monthly-summary/${year}/${month}/`);
       setSummary(response.data);
     } catch (err) {
       console.error("Error fetching monthly summary:", err);
@@ -37,10 +34,7 @@ export const FetchProvider = ({ children }) => {
 
   const fetchTotalExpenses = async () => {
     try {
-      const response = await axios.get(
-        `http://127.0.0.1:8000/api/expenses-months`,
-        { headers }
-      );
+      const response = await api.get("expenses-months/");
       setTotalExpenses(response.data);
     } catch (error) {
       console.error("Error fetching expenses over months:", error);
@@ -49,10 +43,7 @@ export const FetchProvider = ({ children }) => {
 
   const fetchProfile = async () => {
     try {
-      const profileResponse = await axios.get(
-        "http://127.0.0.1:8000/api/financial-profile/",
-        { headers }
-      );
+      const profileResponse = await api.get("financial-profile/");
       setProfile(profileResponse.data[0] || null);
     } catch (error) {
       console.error(
@@ -68,9 +59,8 @@ export const FetchProvider = ({ children }) => {
   const fetchPieData = async () => {
     const [year, month] = selectedMonth.split("-");
     try {
-      const response = await axios.get(
-        `http://127.0.0.1:8000/api/sum-subcategories-month/${year}/${month}/`,
-        { headers }
+      const response = await api.get(
+        `sum-subcategories-month/${year}/${month}/`
       );
       setPieData(response.data);
     } catch (error) {

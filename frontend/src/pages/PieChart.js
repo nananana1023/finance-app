@@ -1,6 +1,7 @@
-import React, { useState } from "react";
+import React, { useState, useContext } from "react";
 import { PieChart, Pie, Tooltip, Legend, Cell } from "recharts";
 import { Container, Row, Col, Form } from "react-bootstrap";
+import AuthContext from "../context/AuthContext";
 
 const COLORS = [
   "#9BBFE0",
@@ -16,8 +17,8 @@ const COLORS = [
 ];
 
 function PieChartContainer({ data }) {
-  const [selectedCategory, setSelectedCategory] = useState("expense"); //initially
-
+  const [selectedCategory, setSelectedCategory] = useState("expense");
+  const SUBCATEGORY_MAPPING = useContext(AuthContext);
   const handleCategoryChange = (event) => {
     setSelectedCategory(event.target.value);
   };
@@ -28,7 +29,7 @@ function PieChartContainer({ data }) {
 
   return (
     <Container className="my-4">
-      {/* Dropdown */}
+      {/* dropdown */}
       <Row className="mb-4">
         <Col md={4}>
           <Form.Group controlId="category-select">
@@ -45,7 +46,7 @@ function PieChartContainer({ data }) {
         </Col>
       </Row>
 
-      {/* Pie Chart */}
+      {/* pie chart */}
       <Row>
         <Col md={8}>
           <div
@@ -85,8 +86,17 @@ function PieChartContainer({ data }) {
                   width: "250px",
                 }}
                 formatter={(value, entry) => {
-                  const { total_amount } = entry.payload;
-                  return `${value}: ${total_amount}`;
+                  const key =
+                    typeof value === "string" ? value.toLowerCase().trim() : "";
+                  const label =
+                    SUBCATEGORY_MAPPING[key] ||
+                    key
+                      .split("_")
+                      .map(
+                        (word) => word.charAt(0).toUpperCase() + word.slice(1)
+                      )
+                      .join(" ");
+                  return `${label}: ${entry.payload.total_amount}`;
                 }}
               />
             </PieChart>

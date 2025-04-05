@@ -2,9 +2,9 @@ import { useNavigate } from "react-router-dom";
 import Header from "../components/Header";
 import AuthContext from "../context/AuthContext";
 import { useEffect, useState, useContext } from "react";
-import axios from "axios";
 import { useLocation } from "react-router-dom";
 import { Container, Row, Col, Card, Form, Button } from "react-bootstrap";
+import api from "../utils/api";
 
 const Profile = () => {
   const { CURRENCY_SYMBOLS, user, logoutUser } = useContext(AuthContext);
@@ -43,10 +43,7 @@ const Profile = () => {
       }
 
       try {
-        const profileResponse = await axios.get(
-          "http://127.0.0.1:8000/api/financial-profile/",
-          { headers }
-        );
+        const profileResponse = await api.get("financial-profile/");
         setProfile(profileResponse.data[0]);
         console.log("Profile data:", profileResponse.data[0]);
       } catch (error) {
@@ -98,15 +95,9 @@ const Profile = () => {
     }
 
     try {
-      const response = await axios.patch(
-        `http://127.0.0.1:8000/api/financial-profile/${user.id}/`,
-        updatedProfile,
-        {
-          headers: {
-            ...headers,
-            Accept: "application/json",
-          },
-        }
+      const response = await api.patch(
+        `financial-profile/${user.id}/`,
+        updatedProfile
       );
       setProfile(response.data);
       setIsEditing(false);

@@ -31,6 +31,33 @@ export const AuthProvider = ({ children }) => {
     HKD: "HK$",
   };
 
+  const SUBCATEGORY_MAPPING = {
+    salary: "Salary",
+    allowance: "Allowance",
+    investment_gain: "Investment Gain",
+    stipend: "Stipend",
+    sale_proceeds: "Sale Proceeds",
+    dividend: "Dividend",
+    other: "Other",
+    grocery: "Grocery",
+    restaurant: "Restaurant",
+    entertainment: "Entertainment",
+    healthcare: "Healthcare",
+    utility: "Utility",
+    subscription: "Subscription",
+    gift: "Gift",
+    self_care: "Self Care",
+    housing: "Housing",
+    clothes: "Clothes",
+    miscellaneous: "Miscellaneous",
+    stock: "Stock",
+    bond: "Bond",
+    crypto: "Crypto",
+    fund: "Fund",
+    real_estate: "Real Estate",
+    savings: "Savings",
+  };
+
   useEffect(() => {
     const fetchUser = async () => {
       let token = localStorage.getItem("accessToken");
@@ -99,7 +126,13 @@ export const AuthProvider = ({ children }) => {
 
   return (
     <AuthContext.Provider
-      value={{ CURRENCY_SYMBOLS, user, loading, logoutUser }}
+      value={{
+        CURRENCY_SYMBOLS,
+        user,
+        loading,
+        logoutUser,
+        SUBCATEGORY_MAPPING,
+      }}
     >
       {children}
     </AuthContext.Provider>

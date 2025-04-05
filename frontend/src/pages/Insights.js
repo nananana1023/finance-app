@@ -1,14 +1,13 @@
 import { useEffect, useState, useContext, Fragment } from "react";
 import React from "react";
-import axios from "axios";
 import AuthContext from "../context/AuthContext";
 import Header from "../components/Header";
 import "../index.css";
 import FetchContext from "../context/FetchContext";
 import { Container, Row, Col, Card, Form, Button } from "react-bootstrap";
+import api from "../utils/api";
 
 const Insights = () => {
-  const { user, CURRENCY_SYMBOLS } = useContext(AuthContext);
   const {
     fetchSummary,
     fetchProfile,
@@ -17,7 +16,8 @@ const Insights = () => {
     profile,
     pieData,
   } = useContext(FetchContext);
-  const { authMessage } = useContext(AuthContext);
+  const { user, CURRENCY_SYMBOLS, authMessage, SUBCATEGORY_MAPPING } =
+    useContext(AuthContext);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const token = localStorage.getItem("accessToken");
@@ -28,10 +28,7 @@ const Insights = () => {
     //avg of expense subcategories
     const fetchAvgAmounts = async () => {
       try {
-        const response = await axios.get(
-          `http://127.0.0.1:8000/api/avg-subcategories`,
-          { headers }
-        );
+        const response = await api.get("avg-subcategories/");
         setAvg(response.data);
         console.log("Average expense per subcategory: ", response.data);
       } catch (error) {
@@ -94,19 +91,25 @@ const Insights = () => {
                   if (
                     item.category === "expense" &&
                     avgItem &&
+                    avgItem.average > 0 &&
                     item.total_amount > avgItem.average
                   ) {
                     return (
                       <p key={index}>
                         This month's spending for{" "}
-                        <strong>{item.subcategory}</strong> is{" "}
+                        <strong>
+                          {SUBCATEGORY_MAPPING[
+                            item.subcategory?.toLowerCase()?.trim()
+                          ] || item.subcategory}
+                        </strong>{" "}
+                        is{" "}
                         <strong>
                           {item.total_amount}
                           {CURRENCY_SYMBOLS[profile.currency]}
                         </strong>
                         , which is more than your average spending of{" "}
                         <strong>
-                          {avgItem.average}
+                          {avgItem.average.toFixed(2)}
                           {CURRENCY_SYMBOLS[profile.currency]}
                         </strong>
                         .

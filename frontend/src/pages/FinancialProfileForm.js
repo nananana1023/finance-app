@@ -1,7 +1,6 @@
 import { useState } from "react";
-import axios from "axios";
-import { refreshAccessToken } from "../utils/auth";
 import { Container, Row, Col } from "react-bootstrap";
+import api from "../utils/api";
 
 const FinancialProfileForm = ({ onSuccess }) => {
   const [formData, setFormData] = useState({
@@ -71,71 +70,24 @@ const FinancialProfileForm = ({ onSuccess }) => {
     e.preventDefault();
     setErrorMessage("");
 
-    let token = localStorage.getItem("accessToken");
-    if (!token) {
-      setErrorMessage("Session expired. Please log in again.");
-      return;
-    }
-
     try {
-      await axios.post(
-        "http://127.0.0.1:8000/api/financial-profile/",
-        formData,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-        }
-      );
+      await api.post("financial-profile/", formData);
       onSuccess();
     } catch (error) {
-      // If the token is expired
-      if (error.response?.status === 401) {
-        token = await refreshAccessToken();
-        if (token) {
-          try {
-            await axios.post(
-              "http://127.0.0.1:8000/api/financial-profile/",
-              formData,
-              {
-                headers: {
-                  Authorization: `Bearer ${token}`,
-                  "Content-Type": "application/json",
-                },
-              }
-            );
-            onSuccess();
-          } catch (retryError) {
-            // Display the backend error from the retry attempt
-            processErrorMessage(retryError);
-          }
-        } else {
-          setErrorMessage("Session expired. Please log in again.");
-        }
-      } else {
-        // Display the backend error from the initial attempt
-        processErrorMessage(error);
-      }
+      processErrorMessage(error);
     }
   };
 
   // Helper function to process and display meaningful error messages
   const processErrorMessage = (error) => {
-    // If the backend sends a JSON with "non_field_errors" or "detail" keys
     const data = error.response?.data;
-
     if (data?.non_field_errors && Array.isArray(data.non_field_errors)) {
-      // If there's an array of non_field_errors, show them joined or just the first
       setErrorMessage(data.non_field_errors.join(" "));
     } else if (data?.detail) {
-      // Some backends use "detail" for the error message
       setErrorMessage(data.detail);
     } else if (data && typeof data === "object") {
-      // If there's some other structure, let's just show it as a string
       setErrorMessage(JSON.stringify(data));
     } else {
-      // Fallback to the error message
       setErrorMessage(error.message);
     }
   };

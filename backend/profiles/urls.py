@@ -15,8 +15,8 @@ urlpatterns = [
         TransactionViewSet.as_view({'get': 'by_month'}),
         name='by-month'
     ),
-    path('expenses-months', expenses_months, name='expenses-months'),
+    path('expenses-months/', expenses_months, name='expenses-months'),
     path('sum-subcategories-month/<int:year>/<int:month>/', sum_subcategories_month, name='sum-subcategories-month'),
-    path('avg-subcategories', avg_subcategories, name='avg-subcategories'),
+    path('avg-subcategories/', avg_subcategories, name='avg-subcategories'),
     path('upload/', FileUploadView.as_view(), name='upload'),
 ]

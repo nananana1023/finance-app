@@ -1,6 +1,5 @@
 import { useEffect, useState, useContext } from "react";
 import React from "react";
-import axios from "axios";
 import AuthContext from "../context/AuthContext";
 import FetchContext from "../context/FetchContext";
 import Header from "../components/Header";
@@ -29,6 +28,7 @@ import {
   Button,
   InputGroup,
 } from "react-bootstrap";
+import api from "../utils/api";
 
 const Transactions = () => {
   const { user, CURRENCY_SYMBOLS } = useContext(AuthContext);
@@ -76,18 +76,11 @@ const Transactions = () => {
       if (!user) return;
 
       try {
-        const profileResponse = await axios.get(
-          "http://127.0.0.1:8000/api/financial-profile/",
-          { headers }
+        const profileResponse = await api.get("financial-profile/");
+        const transactionsResponse = await api.get(
+          `transactions/by-month/${year}/${month}/`
         );
-        const transactionsResponse = await axios.get(
-          `http://127.0.0.1:8000/api/transactions/by-month/${year}/${month}/`,
-          { headers }
-        );
-        const allTrans = await axios.get(
-          `http://127.0.0.1:8000/api/transactions/`,
-          { headers }
-        );
+        const allTrans = await api.get(`transactions/`);
 
         const userTransactions = transactionsResponse.data.filter(
           (t) => t.user === user.user_id
@@ -148,8 +141,8 @@ const Transactions = () => {
   const handleAddTransaction = async (e) => {
     e.preventDefault();
     try {
-      const response = await axios.post(
-        "http://127.0.0.1:8000/api/transactions/",
+      const response = await api.post(
+        "transactions/",
         {
           user: user.user_id,
           subcategory: newTransaction.subcategory,
@@ -219,8 +212,8 @@ const Transactions = () => {
         amount: updatedAmount,
       };
 
-      const response = await axios.put(
-        `http://127.0.0.1:8000/api/transactions/${selectedTransaction.id}/`,
+      const response = await api.put(
+        `transactions/${selectedTransaction.id}/`,
         updatedTransaction,
         { headers }
       );
@@ -261,10 +254,7 @@ const Transactions = () => {
   const handleDeleteTransaction = async () => {
     if (!selectedTransaction) return;
     try {
-      await axios.delete(
-        `http://127.0.0.1:8000/api/transactions/${selectedTransaction.id}/`,
-        { headers }
-      );
+      await api.delete(`transactions/${selectedTransaction.id}/`, { headers });
       setTransactions(
         transactions.filter((t) => t.id !== selectedTransaction.id)
       );
