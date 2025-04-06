@@ -195,7 +195,7 @@ class FileUploadView(APIView):
         except Exception as e:
             return Response({'error': 'Invalid Excel file.'}, status=status.HTTP_400_BAD_REQUEST)
         
-        required_columns = ['Completed Date', 'Description', 'Amount', 'Category']
+        required_columns = ['Date', 'Note', 'Amount', 'Category']
         if not all(col in df.columns for col in required_columns):
             return Response({
                 'error': 'Missing one or more required columns.',
@@ -207,7 +207,7 @@ class FileUploadView(APIView):
 
         for index, row in df.iterrows():
             try:
-                date_value = row['Completed Date']
+                date_value = row['Date']
                 if not isinstance(date_value, datetime):
                     date_value = datetime.strptime(str(date_value), "%m/%d/%Y %H:%M").date()
                 else:
@@ -215,9 +215,9 @@ class FileUploadView(APIView):
                 
                 serializer_data = {
                     "date": date_value,
-                    "note": row['Description'],
-                    "amount": abs(row['Amount']),  
-                    "subcategory": row['Category'], 
+                    "note": row['Note'],
+                    "amount": abs(row['Amount']),
+                    "subcategory": row['Category'],
                 }
                 
                 serializer = TransactionSerializer(data=serializer_data)
@@ -231,9 +231,10 @@ class FileUploadView(APIView):
                 continue
         
         if errors:
+            # Return a 200 response indicating partial success along with error details.
             return Response({
-                'message': f'{created} transactions created.',
+                'message': f'{created} transactions created successfully.',
                 'errors': errors
-            }, status=status.HTTP_400_BAD_REQUEST)
+            }, status=status.HTTP_200_OK)
         
-        return Response({'message': f'{created} transactions uploaded successfully.'}, status=status.HTTP_201_CREATED)
+        return Response({'message': f'{created} transactions created successfully.'}, status=status.HTTP_201_CREATED)

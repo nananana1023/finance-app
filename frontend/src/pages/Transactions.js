@@ -3,6 +3,7 @@ import React from "react";
 import AuthContext from "../context/AuthContext";
 import FetchContext from "../context/FetchContext";
 import Header from "../components/Header";
+import * as XLSX from "xlsx";
 import {
   BarChart,
   Bar,
@@ -343,6 +344,27 @@ const Transactions = () => {
     }
   };
 
+  const handleExport = () => {
+    const exportData = [];
+    for (const date in groupedTransactions) {
+      groupedTransactions[date].forEach((transaction) => {
+        exportData.push({
+          Date: transaction.date,
+          Subcategory: transaction.subcategory,
+          Amount: transaction.amount,
+          Note: transaction.note,
+          Recurring: transaction.recurring ? "Yes" : "No",
+        });
+      });
+    }
+
+    const worksheet = XLSX.utils.json_to_sheet(exportData);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Transactions");
+    const filename = `Transactions_${selectedMonth}.xlsx`;
+    XLSX.writeFile(workbook, filename);
+  };
+
   const spendingData =
     profile && profile.monthly_spending_goal
       ? [
@@ -527,7 +549,7 @@ const Transactions = () => {
           </Row>
         )}
 
-        {/* Toggle Buttons for Modal */}
+        {/*modal buttons */}
         <Row className="mb-5">
           <Col className="d-flex justify-content-center">
             <Button
@@ -566,7 +588,7 @@ const Transactions = () => {
                 padding: "20px",
                 borderRadius: "8px",
                 width: "90%",
-                maxWidth: "600px",
+                maxWidth: "700px",
                 position: "relative",
               }}
             >
@@ -848,7 +870,7 @@ const Transactions = () => {
           </div>
         )}
 
-        {/* Transactions & Recurring Transactions */}
+        {/* Transactions */}
         <Row>
           <h3>
             <strong>Your Transactions</strong>
@@ -866,8 +888,22 @@ const Transactions = () => {
             />
           )}
         </Row>
-
-        {/* Edit Transaction Modal */}
+        <Row className="mb-3">
+          <Col className="d-flex justify-content-end">
+            <Button
+              className="btn btn-animate"
+              style={{
+                backgroundColor: "#A5BB9F",
+                color: "black",
+                border: "none",
+              }}
+              onClick={handleExport}
+            >
+              Export
+            </Button>
+          </Col>
+        </Row>
+        {/* Edit Transaction */}
         {selectedTransaction && (
           <div
             style={{

@@ -1,15 +1,7 @@
 import React, { useState, useContext } from "react";
 import AuthContext from "../context/AuthContext";
 import "../styles/table.css";
-import {
-  Container,
-  Row,
-  Col,
-  Card,
-  Form,
-  Button,
-  InputGroup,
-} from "react-bootstrap";
+import FilterCard from "./FilterCard";
 
 const getCategoryColor = (cat) => {
   if (cat === "expense") return "#78281f";
@@ -41,12 +33,16 @@ const filterTransactions = (groupedTransactions, filters) => {
     }
     const filteredTransactions = groupedTransactions[date].filter(
       (transaction) => {
-        if (
-          filters.subcategory &&
-          transaction.subcategory.toLowerCase() !==
-            filters.subcategory.toLowerCase()
-        )
-          return false;
+        // If subcategory filter is provided as a non-empty array, check if transaction's subcategory is included.
+        if (filters.subcategory && filters.subcategory.length > 0) {
+          const transactionSubcat = transaction.subcategory.toLowerCase();
+          const selectedSubcats = filters.subcategory.map((sub) =>
+            sub.toLowerCase()
+          );
+          if (!selectedSubcats.includes(transactionSubcat)) {
+            return false;
+          }
+        }
         if (
           filters.category &&
           transaction.category.toLowerCase() !== filters.category.toLowerCase()
@@ -80,10 +76,10 @@ const PaginatedTable = ({
   itemsPerPage = 10,
   selectedMonth,
 }) => {
-  const { CURRENCY_SYMBOLS } = useContext(AuthContext);
+  const { CURRENCY_SYMBOLS, SUBCATEGORY_MAPPING } = useContext(AuthContext);
 
   const [filters, setFilters] = useState({
-    subcategory: "",
+    subcategory: [],
     category: "",
     minAmount: "",
     maxAmount: "",
@@ -144,146 +140,13 @@ const PaginatedTable = ({
   return (
     <div className="container-fluid">
       {/* filter */}
-      <Card
-        style={{
-          backgroundColor: "#E9E9DF",
-          padding: "20px",
-          borderRadius: "8px",
-        }}
-      >
-        <div className="row mb-2">
-          <div className="col-md-3 mb-2">
-            <select
-              value={filters.category}
-              onChange={(e) =>
-                setFilters({ ...filters, category: e.target.value })
-              }
-              className="form-select"
-            >
-              <option value="">All</option>
-              <option value="income">Income</option>
-              <option value="expense">Expense</option>
-              <option value="savings_investment">Savings/Investment</option>
-            </select>
-          </div>
-          <div className="col-md-3 mb-2">
-            <select
-              value={filters.subcategory}
-              onChange={(e) =>
-                setFilters({ ...filters, subcategory: e.target.value })
-              }
-              className="form-select"
-            >
-              <option value="">Select Category</option>
-              <optgroup label="Income">
-                <option value="salary">Salary</option>
-                <option value="allowance">Allowance</option>
-                <option value="investment_gain">Investment Gain</option>
-                <option value="stipend">Stipend</option>
-                <option value="sale_proceeds">Sale Proceeds</option>
-                <option value="dividend">Dividend</option>
-                <option value="other">Other</option>
-              </optgroup>
-              <optgroup label="Expense">
-                <option value="grocery">Grocery</option>
-                <option value="restaurant">Restaurant</option>
-                <option value="entertainment">Entertainment</option>
-                <option value="healthcare">Healthcare</option>
-                <option value="utility">Utility</option>
-                <option value="subscription">Subscription</option>
-                <option value="gift">Gift</option>
-                <option value="self_care">Self Care</option>
-                <option value="housing">Housing</option>
-                <option value="clothes">Clothes</option>
-                <option value="miscellaneous">Miscellaneous</option>
-              </optgroup>
-              <optgroup label="Investment/Savings">
-                <option value="">Select Investment Category</option>
-                <option value="stock">Stock</option>
-                <option value="bond">Bond</option>
-                <option value="crypto">Crypto</option>
-                <option value="fund">Fund</option>
-                <option value="real_estate">Real Estate</option>
-                <option value="savings">Savings</option>
-              </optgroup>
-            </select>
-          </div>
-          <div className="col-md-3 mb-2">
-            <input
-              type="number"
-              placeholder="Min Amount"
-              value={filters.minAmount}
-              onChange={(e) =>
-                setFilters({ ...filters, minAmount: e.target.value })
-              }
-              className="form-control"
-            />
-          </div>
-          <div className="col-md-3 mb-2">
-            <input
-              type="number"
-              placeholder="Max Amount"
-              value={filters.maxAmount}
-              onChange={(e) =>
-                setFilters({ ...filters, maxAmount: e.target.value })
-              }
-              className="form-control"
-            />
-          </div>
-        </div>
-
-        <div className="row align-items-end">
-          <div className="col-md-3 mb-2">
-            <label htmlFor="minDate" className="ms-2">
-              From:{" "}
-            </label>
-            <input
-              id="minDate"
-              type="date"
-              value={filters.minDate}
-              onChange={(e) =>
-                setFilters({ ...filters, minDate: e.target.value })
-              }
-              className="form-control"
-            />
-          </div>
-          <div className="col-md-3 mb-2">
-            <label htmlFor="maxDate" className="ms-2">
-              Until:{" "}
-            </label>
-            <input
-              id="maxDate"
-              type="date"
-              value={filters.maxDate}
-              onChange={(e) =>
-                setFilters({ ...filters, maxDate: e.target.value })
-              }
-              className="form-control"
-            />
-          </div>
-          <div className="col-md-3 mb-2">
-            <button
-              onClick={handleApplyFilters}
-              className="btn w-100"
-              style={{
-                backgroundColor: "#A5BB9F",
-                color: "black",
-                border: "none",
-              }}
-            >
-              Search
-            </button>
-          </div>
-          <div className="col-md-3 mb-2">
-            <button
-              onClick={handleResetFilters}
-              className="btn btn-outline-secondary w-100"
-            >
-              Clear All
-            </button>
-          </div>
-        </div>
-      </Card>
+      <FilterCard
+        filters={filters}
+        setFilters={setFilters}
+        SUBCATEGORY_MAPPING={SUBCATEGORY_MAPPING}
+        handleApplyFilters={handleApplyFilters}
+        handleResetFilters={handleResetFilters}
+      />
 
       <div className="row justify-content-center" style={{ marginTop: "30px" }}>
         {/* Transactions */}

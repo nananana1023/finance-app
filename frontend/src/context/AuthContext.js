@@ -74,7 +74,6 @@ export const AuthProvider = ({ children }) => {
         const response = await axios.get("http://127.0.0.1:8000/auth/user/", {
           headers: { Authorization: `Bearer ${token}` },
         });
-
         console.log("User:", response.data);
         setUser(response.data);
       } catch (error) {
@@ -82,11 +81,9 @@ export const AuthProvider = ({ children }) => {
           "Error getting user:",
           error.response?.data || error.message
         );
-
         if (error.response?.status === 401) {
           console.log("Refreshing token");
           token = await refreshAccessToken();
-
           if (token) {
             try {
               const retryResponse = await axios.get(
@@ -95,7 +92,6 @@ export const AuthProvider = ({ children }) => {
                   headers: { Authorization: `Bearer ${token}` },
                 }
               );
-
               console.log("User data after refresh:", retryResponse.data);
               setUser(retryResponse.data);
             } catch (retryError) {
@@ -117,6 +113,19 @@ export const AuthProvider = ({ children }) => {
     fetchUser();
   }, []);
 
+  useEffect(() => {
+    const intervalId = setInterval(async () => {
+      const token = await refreshAccessToken();
+      if (token) {
+        console.log("Token auto-refreshed.");
+      } else {
+        console.log("Auto-refresh failed. Consider logging out the user.");
+      }
+    }, 5 * 60 * 1000);
+
+    return () => clearInterval(intervalId);
+  }, []);
+
   const logoutUser = () => {
     console.log("Logging out");
     localStorage.removeItem("accessToken");
@@ -132,6 +141,7 @@ export const AuthProvider = ({ children }) => {
         loading,
         logoutUser,
         SUBCATEGORY_MAPPING,
+        authMessage,
       }}
     >
       {children}

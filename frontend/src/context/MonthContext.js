@@ -3,7 +3,6 @@ import React, { createContext, useState } from "react";
 const MonthContext = createContext();
 
 export const MonthProvider = ({ children }) => {
-  //share the selected month in trans and home
   const [selectedMonth, setSelectedMonth] = useState(() => {
     const currentDate = new Date();
     const year = currentDate.getFullYear();

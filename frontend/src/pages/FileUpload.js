@@ -30,16 +30,28 @@ const FileUpload = () => {
       setMessage(response.data.message);
     } catch (error) {
       console.error("Upload error:", error.response.data);
-      setMessage(
-        "Error uploading file: " + JSON.stringify(error.response.data)
-      );
+      setMessage("Error uploading file. ");
     }
   };
 
   return (
     <div className="mb-3">
-      <Row className="align-items-center">
-        <Col xs="auto">
+      <Row className="align-items-center g-3">
+        <Col md="auto">
+          <a href="/template.xlsx" download>
+            <button
+              className="btn btn-animate"
+              style={{
+                backgroundColor: "#D9C9B3",
+                color: "black",
+                border: "none",
+              }}
+            >
+              Download Template
+            </button>
+          </a>
+        </Col>
+        <Col md="auto">
           <input
             type="file"
             className="form-control w-auto"
@@ -48,11 +60,11 @@ const FileUpload = () => {
             onChange={handleFileChange}
           />
         </Col>
-        <Col xs="auto">
+        <Col md="auto">
           <button
             className="btn btn-animate"
             style={{
-              backgroundColor: "#D9C9B3",
+              backgroundColor: "#A5BB9F",
               color: "black",
               border: "none",
             }}
@@ -62,6 +74,7 @@ const FileUpload = () => {
           </button>
         </Col>
       </Row>
+
       {message && <p className="mt-3">{message}</p>}
     </div>
   );

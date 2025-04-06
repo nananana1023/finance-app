@@ -18,11 +18,8 @@ const Insights = () => {
   } = useContext(FetchContext);
   const { user, CURRENCY_SYMBOLS, authMessage, SUBCATEGORY_MAPPING } =
     useContext(AuthContext);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const token = localStorage.getItem("accessToken");
-  const headers = { Authorization: `Bearer ${token}` };
   const [avg, setAvg] = useState(null);
+  const currentDate = new Date().getDate();
 
   useEffect(() => {
     //avg of expense subcategories
@@ -72,17 +69,21 @@ const Insights = () => {
               summary.total_expense > profile.monthly_spending_goal && (
                 <p>
                   You exceeded your monthly spending goal by{" "}
-                  {summary.total_expense - profile.monthly_spending_goal}
+                  {(
+                    summary.total_expense - profile.monthly_spending_goal
+                  ).toFixed(2)}
                   {CURRENCY_SYMBOLS[profile.currency]}.
                 </p>
               )}
-            {profile && summary.total_investment < invest_goal_amount && (
-              <p>
-                You invested {summary.total_investment}
-                {CURRENCY_SYMBOLS[profile.currency]} this month which is less
-                than your goal.
-              </p>
-            )}
+            {profile &&
+              summary.total_investment < invest_goal_amount &&
+              currentDate > 15 && (
+                <p>
+                  You invested {summary.total_investment}
+                  {CURRENCY_SYMBOLS[profile.currency]} this month which is less
+                  than your goal.
+                </p>
+              )}
             <div>
               {pieData &&
                 pieData.map((item, index) => {
