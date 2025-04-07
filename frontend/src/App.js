@@ -3,7 +3,6 @@ import { AuthProvider } from "./context/AuthContext";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Dashboard from "./pages/Dashboard";
-import Home from "./pages/Home";
 import UserHome from "./pages/UserHome";
 import Transactions from "./pages/Transactions";
 import Insights from "./pages/Insights";

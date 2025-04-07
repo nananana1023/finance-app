@@ -12,7 +12,6 @@ import {
   Tooltip,
   ResponsiveContainer,
   LabelList,
-  Legend,
   Cell,
 } from "recharts";
 import MonthContext from "../context/MonthContext";
@@ -43,16 +42,12 @@ const Transactions = () => {
     useContext(MonthContext);
   const [error, setError] = useState(null);
   const [originalTransaction, setOriginalTransaction] = useState(null);
-  const [showForm, setShowForm] = useState(false); // no longer used for toggling "Add Transaction" modal
   const [selectedCurrency, setSelectedCurrency] = useState(profile?.currency);
   const [convertedAmount, setConvertedAmount] = useState(null);
   const [showCustomRateField, setShowCustomRateField] = useState(false);
   const [customExchangeRate, setCustomExchangeRate] = useState("");
   const [showCalculator, setShowCalculator] = useState(false);
-
-  // New state: activeTab will be null, "upload" or "manual"
   const [activeTab, setActiveTab] = useState(null);
-
   const [newTransaction, setNewTransaction] = useState({
     subcategory: "",
     amount: "",
@@ -63,7 +58,6 @@ const Transactions = () => {
   const [selectedTransaction, setSelectedTransaction] = useState(null);
 
   const token = localStorage.getItem("accessToken");
-  const headers = { Authorization: `Bearer ${token}` };
 
   useEffect(() => {
     const fetchProfileAndTransactions = async () => {
@@ -74,7 +68,9 @@ const Transactions = () => {
         setLoading(false);
         return;
       }
-      if (!user) return;
+      if (!user) {
+        return;
+      }
 
       try {
         const profileResponse = await api.get("financial-profile/");
@@ -142,18 +138,14 @@ const Transactions = () => {
   const handleAddTransaction = async (e) => {
     e.preventDefault();
     try {
-      const response = await api.post(
-        "transactions/",
-        {
-          user: user.user_id,
-          subcategory: newTransaction.subcategory,
-          amount: convertedAmount || newTransaction.amount,
-          note: newTransaction.note,
-          date: newTransaction.date,
-          recurring: newTransaction.recurring,
-        },
-        { headers }
-      );
+      const response = await api.post("transactions/", {
+        user: user.user_id,
+        subcategory: newTransaction.subcategory,
+        amount: convertedAmount || newTransaction.amount,
+        note: newTransaction.note,
+        date: newTransaction.date,
+        recurring: newTransaction.recurring,
+      });
       setTransactions([...transactions, response.data]);
       setActiveTab(null); // close the modal
 
@@ -215,8 +207,7 @@ const Transactions = () => {
 
       const response = await api.put(
         `transactions/${selectedTransaction.id}/`,
-        updatedTransaction,
-        { headers }
+        updatedTransaction
       );
       setTransactions(
         transactions.map((t) =>
@@ -255,7 +246,7 @@ const Transactions = () => {
   const handleDeleteTransaction = async () => {
     if (!selectedTransaction) return;
     try {
-      await api.delete(`transactions/${selectedTransaction.id}/`, { headers });
+      await api.delete(`transactions/${selectedTransaction.id}/`);
       setTransactions(
         transactions.filter((t) => t.id !== selectedTransaction.id)
       );

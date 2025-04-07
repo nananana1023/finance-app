@@ -1,11 +1,20 @@
-import { useEffect, useState, useContext, Fragment } from "react";
+import { useEffect, useState, useContext } from "react";
 import React from "react";
 import AuthContext from "../context/AuthContext";
 import Header from "../components/Header";
 import "../index.css";
 import FetchContext from "../context/FetchContext";
-import { Container, Row, Col, Card, Form, Button } from "react-bootstrap";
+import { Container, Card } from "react-bootstrap";
 import api from "../utils/api";
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+} from "recharts";
 
 const Insights = () => {
   const {
@@ -22,7 +31,7 @@ const Insights = () => {
   const currentDate = new Date().getDate();
 
   useEffect(() => {
-    //avg of expense subcategories
+    // Fetch average expense per subcategory
     const fetchAvgAmounts = async () => {
       try {
         const response = await api.get("avg-subcategories/");
@@ -44,6 +53,30 @@ const Insights = () => {
       summary.total_income
     : null;
 
+  const exceededSpendingGoal =
+    profile && summary.total_expense > profile.monthly_spending_goal;
+
+  const expenseData =
+    pieData && avg
+      ? pieData.filter(
+          (item) =>
+            item.category === "expense" &&
+            avg.find((a) => a.subcategory === item.subcategory)
+        )
+      : [];
+
+  const chartData = expenseData.map((item) => {
+    const avgItem = avg.find((a) => a.subcategory === item.subcategory);
+    if (avgItem && avgItem.average > 0 && item.total_amount > avgItem.average)
+      return {
+        name:
+          SUBCATEGORY_MAPPING[item.subcategory?.toLowerCase()?.trim()] ||
+          item.subcategory,
+        averageSpending: avgItem ? parseFloat(avgItem.average.toFixed(2)) : 0,
+        thisMonthSpending: item.total_amount,
+      };
+  });
+
   return (
     <div
       style={{
@@ -55,42 +88,49 @@ const Insights = () => {
       <Header />
       <Container className="py-5">
         {authMessage && <div className="alert alert-danger">{authMessage}</div>}
-
         <h3 className="text-center mb-4" style={{ color: "black" }}>
           Financial Insights
         </h3>
 
         <Card
           className="mb-4"
-          style={{ border: "none", borderRadius: "8px", overflow: "hidden" }}
+          style={{
+            border: exceededSpendingGoal ? "2px solid red" : "none",
+            borderRadius: "8px",
+            overflow: "hidden",
+          }}
         >
           <Card.Body style={{ backgroundColor: "#E9E9DF", color: "black" }}>
-            {profile &&
-              summary.total_expense > profile.monthly_spending_goal && (
-                <p>
-                  You exceeded your monthly spending goal by{" "}
-                  {(
-                    summary.total_expense - profile.monthly_spending_goal
-                  ).toFixed(2)}
-                  {CURRENCY_SYMBOLS[profile.currency]}.
-                </p>
-              )}
+            {profile && exceededSpendingGoal && (
+              <p style={{ fontWeight: "bold", color: "red" }}>
+                Alert: You exceeded your monthly spending goal by{" "}
+                {(
+                  summary.total_expense - profile.monthly_spending_goal
+                ).toFixed(2)}
+                {CURRENCY_SYMBOLS[profile.currency]}.
+              </p>
+            )}
             {profile &&
               summary.total_investment < invest_goal_amount &&
               currentDate > 15 && (
-                <p>
-                  You invested {summary.total_investment}
+                <p style={{ fontWeight: "bold", color: "orange" }}>
+                  Warning: You invested {summary.total_investment}
                   {CURRENCY_SYMBOLS[profile.currency]} this month which is less
                   than your goal.
                 </p>
               )}
-            <div>
-              {pieData &&
-                pieData.map((item, index) => {
-                  const avgItem =
-                    avg && avg.find((a) => a.subcategory === item.subcategory);
+            {profile && !exceededSpendingGoal && (
+              <p style={{ fontWeight: "bold", color: "green" }}>
+                You are on track with your monthly spending goal — great job!
+              </p>
+            )}
+            {/* <div>
+              {expenseData &&
+                expenseData.map((item, index) => {
+                  const avgItem = avg.find(
+                    (a) => a.subcategory === item.subcategory
+                  );
                   if (
-                    item.category === "expense" &&
                     avgItem &&
                     avgItem.average > 0 &&
                     item.total_amount > avgItem.average
@@ -119,9 +159,48 @@ const Insights = () => {
                   }
                   return null;
                 })}
-            </div>
+            </div> */}
           </Card.Body>
         </Card>
+
+        {chartData && chartData.length > 0 && (
+          <Card
+            className="mb-4"
+            style={{ borderRadius: "8px", overflow: "hidden" }}
+          >
+            <Card.Body style={{ backgroundColor: "#F7F7F7", color: "black" }}>
+              <h5 className="text-center mb-3">Spending Comparison</h5>
+              <BarChart
+                width={900}
+                height={300}
+                data={chartData}
+                // Reduce left and right margins so the bars start near the edge
+                margin={{ top: 20, right: 20, left: 20, bottom: 20 }}
+                // Controls spacing between bar groups
+                barCategoryGap="10%"
+                // Controls spacing between bars within a group
+                barGap={10}
+              >
+                <CartesianGrid strokeDasharray="3 3" />
+                {/* Add or remove padding to move bars away from the chart edges */}
+                <XAxis dataKey="name" padding={{ left: 0, right: 0 }} />
+                <YAxis />
+                <Tooltip />
+                <Legend />
+                <Bar
+                  dataKey="averageSpending"
+                  fill="#9BBFE0"
+                  name="Average Spending"
+                />
+                <Bar
+                  dataKey="thisMonthSpending"
+                  fill="#E8A09A"
+                  name="This Month Spending"
+                />
+              </BarChart>
+            </Card.Body>
+          </Card>
+        )}
       </Container>
     </div>
   );

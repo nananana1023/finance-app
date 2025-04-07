@@ -7,9 +7,10 @@ import { Container, Row, Col, Card, Form, Button } from "react-bootstrap";
 import api from "../utils/api";
 
 const Profile = () => {
-  const { CURRENCY_SYMBOLS, user, logoutUser } = useContext(AuthContext);
+  const { CURRENCY_SYMBOLS, user, logoutUser, loading } =
+    useContext(AuthContext);
   const navigate = useNavigate();
-  const [loading, setLoading] = useState(true);
+  //const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [successMessage, setSuccessMessage] = useState("");
   const [formError, setFormError] = useState("");
@@ -23,7 +24,6 @@ const Profile = () => {
   const location = useLocation();
 
   const token = localStorage.getItem("accessToken");
-  const headers = { Authorization: `Bearer ${token}` };
 
   const handleLogout = () => {
     logoutUser();
@@ -31,30 +31,26 @@ const Profile = () => {
   };
 
   useEffect(() => {
+    // Wait until AuthContext has finished loading
+    if (loading) return;
+    // If, after loading, user is still null, show an error or return early
+    if (!user) {
+      setError("User is not authenticated.");
+      return;
+    }
+
     const fetchProfileData = async () => {
-      if (!token) {
-        setError("User is not authenticated.");
-        setLoading(false);
-        return;
-      }
-
-      if (!user) {
-        return;
-      }
-
       try {
         const profileResponse = await api.get("financial-profile/");
         setProfile(profileResponse.data[0]);
         console.log("Profile data:", profileResponse.data[0]);
       } catch (error) {
         setError("Failed to load user data.");
-      } finally {
-        setLoading(false);
       }
     };
 
     fetchProfileData();
-  }, [user]);
+  }, [loading, user, token]);
 
   useEffect(() => {
     if (location.state && location.state.successMessage) {

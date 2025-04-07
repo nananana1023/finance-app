@@ -1,9 +1,10 @@
-import { useState } from "react";
+import { useState, useContext } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import axios from "axios";
 import { Eye, EyeOff } from "lucide-react";
-import { Container, Row, Col, Card, Form, Button } from "react-bootstrap";
+import { Container, Row, Col, Form, Button } from "react-bootstrap";
 import "../styles/login.css";
+import AuthContext from "../context/AuthContext";
 
 const Login = () => {
   const [username, setUsername] = useState("");
@@ -13,6 +14,8 @@ const Login = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const successMessage = location.state?.successMessage;
+
+  const { setToken } = useContext(AuthContext);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -24,6 +27,7 @@ const Login = () => {
       console.log("Login successful:", response.data);
       localStorage.setItem("accessToken", response.data.access);
       localStorage.setItem("refreshToken", response.data.refresh);
+      setToken(response.data.access);
       navigate("/dashboard");
     } catch (error) {
       console.error("Login error:", error.response?.data || error.message);

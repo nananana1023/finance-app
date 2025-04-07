@@ -1,15 +1,11 @@
 import { createContext, useContext, useState } from "react";
 import MonthContext from "../context/MonthContext";
-import AuthContext from "../context/AuthContext";
 import api from "../utils/api";
 
 const FetchContext = createContext();
 
 export const FetchProvider = ({ children }) => {
   const { selectedMonth } = useContext(MonthContext);
-  const { user } = useContext(AuthContext);
-  const token = localStorage.getItem("accessToken");
-  const headers = { Authorization: `Bearer ${token}` };
 
   const [summary, setSummary] = useState({
     total_expense: 0,

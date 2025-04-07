@@ -1,12 +1,9 @@
-import { useState, useContext } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
-import AuthContext from "../context/AuthContext";
-import { Container, Row, Col, Card, Form, Button } from "react-bootstrap";
 import Header from "../components/Header";
 
 const ChangePassword = () => {
-  const { user } = useContext(AuthContext);
   const navigate = useNavigate();
 
   const [formData, setFormData] = useState({
@@ -25,7 +22,7 @@ const ChangePassword = () => {
   });
 
   const [error, setError] = useState("");
-  const [successMessage, setSuccessMessage] = useState("");
+  const [successMessage] = useState("");
 
   const token = localStorage.getItem("accessToken");
   const headers = { Authorization: `Bearer ${token}` };

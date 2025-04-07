@@ -51,7 +51,7 @@ const Dashboard = () => {
 
   const handleProfileSubmit = () => {
     setProfile(true);
-    navigate("/userhome", {
+    navigate("/profile", {
       state: {
         message: "Your financial profile has been set up successfully! ",
       },

@@ -1,12 +1,9 @@
-import { useState, useContext } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
-import AuthContext from "../context/AuthContext";
 import Header from "../components/Header";
-import { Container, Row, Col, Card, Form, Button } from "react-bootstrap";
 
 const ChangeUsername = () => {
-  const { user } = useContext(AuthContext);
   const navigate = useNavigate();
 
   const [formData, setFormData] = useState({

@@ -1,16 +1,13 @@
-import { useEffect, useState, useContext } from "react";
+import { useEffect, useContext } from "react";
 import AuthContext from "../context/AuthContext";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useLocation } from "react-router-dom";
 import {
   BarChart,
   Bar,
   XAxis,
   YAxis,
-  Tooltip,
   ResponsiveContainer,
-  CartesianGrid,
   LabelList,
-  Legend,
   Cell,
   LineChart,
   Line,
@@ -20,15 +17,7 @@ import Header from "../components/Header";
 import MonthContext from "../context/MonthContext";
 import PieChartContainer from "./PieChart";
 import FetchContext from "../context/FetchContext";
-import {
-  Container,
-  Row,
-  Col,
-  Card,
-  Form,
-  Button,
-  InputGroup,
-} from "react-bootstrap";
+import { Row, Col, Form, Button, InputGroup } from "react-bootstrap";
 
 const UserHome = () => {
   const { user, CURRENCY_SYMBOLS } = useContext(AuthContext);
@@ -46,10 +35,7 @@ const UserHome = () => {
   const { selectedMonth, setSelectedMonth, handleNextMonth, handlePrevMonth } =
     useContext(MonthContext);
 
-  const token = localStorage.getItem("accessToken");
-  const headers = { Authorization: `Bearer ${token}` };
   const location = useLocation();
-  const navigate = useNavigate();
   const isDataEmpty =
     summary.total_expense === 0 &&
     summary.total_income === 0 &&
@@ -96,7 +82,6 @@ const UserHome = () => {
         fontFamily: "monospace",
       }}
     >
-      {/* Header */}
       <Header />
 
       {/* Success Message */}
@@ -119,7 +104,7 @@ const UserHome = () => {
           <ResponsiveContainer width="100%" height={400}>
             <LineChart
               data={total_expenses}
-              margin={{ top: 20, right: 30, left: 60, bottom: 50 }}
+              margin={{ top: 40, right: 30, left: 80, bottom: 50 }}
             >
               <XAxis
                 dataKey="month_name"
@@ -130,12 +115,12 @@ const UserHome = () => {
               <YAxis hide />
               <ReferenceLine
                 y={profile?.monthly_spending_goal}
-                stroke="#FF6961"
+                stroke="#E8A09A"
                 label={({ viewBox }) => {
                   const { x, y } = viewBox;
                   return (
-                    <text x={x} y={y - 10} textAnchor="middle" fill="#FF6961">
-                      {(profile?.monthly_spending_goal).toFixed(2)}
+                    <text x={x} y={y - 10} textAnchor="middle" fill="#E8A09A">
+                      Goal: {profile?.monthly_spending_goal}
                       {CURRENCY_SYMBOLS[profile?.currency] || profile?.currency}
                     </text>
                   );
@@ -144,14 +129,14 @@ const UserHome = () => {
               <Line
                 type="linear"
                 dataKey="amount"
-                stroke="#6CA0DC"
+                stroke="#9BBFE0"
                 activeDot={{ r: 8 }}
               >
                 <LabelList
                   dataKey="amount"
                   position="top"
                   formatter={(value) =>
-                    `${value}${
+                    `${Math.round(value)}${
                       CURRENCY_SYMBOLS[profile?.currency] || profile?.currency
                     }`
                   }

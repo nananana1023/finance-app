@@ -8,6 +8,7 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [authMessage, setAuthMessage] = useState(null);
+  const [token, setToken] = useState(localStorage.getItem("accessToken"));
 
   const CURRENCY_SYMBOLS = {
     USD: "$",
@@ -60,16 +61,12 @@ export const AuthProvider = ({ children }) => {
 
   useEffect(() => {
     const fetchUser = async () => {
-      let token = localStorage.getItem("accessToken");
-
       console.log("Token:", token);
-
       if (!token) {
         console.log("No token found. User is not authenticated.");
         setLoading(false);
         return;
       }
-
       try {
         const response = await axios.get("http://127.0.0.1:8000/auth/user/", {
           headers: { Authorization: `Bearer ${token}` },
@@ -83,13 +80,14 @@ export const AuthProvider = ({ children }) => {
         );
         if (error.response?.status === 401) {
           console.log("Refreshing token");
-          token = await refreshAccessToken();
-          if (token) {
+          const newToken = await refreshAccessToken();
+          if (newToken) {
+            setToken(newToken); // update token state so the effect re-runs
             try {
               const retryResponse = await axios.get(
                 "http://127.0.0.1:8000/auth/user/",
                 {
-                  headers: { Authorization: `Bearer ${token}` },
+                  headers: { Authorization: `Bearer ${newToken}` },
                 }
               );
               console.log("User data after refresh:", retryResponse.data);
@@ -111,7 +109,7 @@ export const AuthProvider = ({ children }) => {
     };
 
     fetchUser();
-  }, []);
+  }, [token]);
 
   useEffect(() => {
     const intervalId = setInterval(async () => {
@@ -119,7 +117,7 @@ export const AuthProvider = ({ children }) => {
       if (token) {
         console.log("Token auto-refreshed.");
       } else {
-        console.log("Auto-refresh failed. Consider logging out the user.");
+        console.log("Auto-refresh failed.");
       }
     }, 5 * 60 * 1000);
 
@@ -131,6 +129,7 @@ export const AuthProvider = ({ children }) => {
     localStorage.removeItem("accessToken");
     localStorage.removeItem("refreshToken");
     setUser(null);
+    setToken(null);
   };
 
   return (
@@ -142,6 +141,7 @@ export const AuthProvider = ({ children }) => {
         logoutUser,
         SUBCATEGORY_MAPPING,
         authMessage,
+        setToken, // Expose setToken so login can update it if needed
       }}
     >
       {children}

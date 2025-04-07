@@ -32,7 +32,6 @@ const SAVINGS_INVESTMENT_SUBCATEGORIES = [
   "savings",
 ];
 
-// Combine all subcategories for "All" category.
 const ALL_SUBCATEGORIES = [
   ...INCOME_SUBCATEGORIES,
   ...EXPENSE_SUBCATEGORIES,
@@ -47,10 +46,6 @@ const FilterCard = ({
   handleResetFilters,
 }) => {
   const [dropdownOpen, setDropdownOpen] = useState(false);
-
-  // Determine which subcategories to show:
-  // If a specific category is selected, show only its subcategories.
-  // Otherwise (if category is "" or "all"), show all subcategories.
   const availableSubcategories =
     filters.category && filters.category.toLowerCase() !== "all"
       ? filters.category.toLowerCase() === "income"
