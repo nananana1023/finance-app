@@ -124,42 +124,6 @@ const Insights = () => {
                 You are on track with your monthly spending goal — great job!
               </p>
             )}
-            {/* <div>
-              {expenseData &&
-                expenseData.map((item, index) => {
-                  const avgItem = avg.find(
-                    (a) => a.subcategory === item.subcategory
-                  );
-                  if (
-                    avgItem &&
-                    avgItem.average > 0 &&
-                    item.total_amount > avgItem.average
-                  ) {
-                    return (
-                      <p key={index}>
-                        This month's spending for{" "}
-                        <strong>
-                          {SUBCATEGORY_MAPPING[
-                            item.subcategory?.toLowerCase()?.trim()
-                          ] || item.subcategory}
-                        </strong>{" "}
-                        is{" "}
-                        <strong>
-                          {item.total_amount}
-                          {CURRENCY_SYMBOLS[profile.currency]}
-                        </strong>
-                        , which is more than your average spending of{" "}
-                        <strong>
-                          {avgItem.average.toFixed(2)}
-                          {CURRENCY_SYMBOLS[profile.currency]}
-                        </strong>
-                        .
-                      </p>
-                    );
-                  }
-                  return null;
-                })}
-            </div> */}
           </Card.Body>
         </Card>
 

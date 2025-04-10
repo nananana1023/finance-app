@@ -51,6 +51,7 @@ export const AuthProvider = ({ children }) => {
     housing: "Housing",
     clothes: "Clothes",
     miscellaneous: "Miscellaneous",
+    travel: "Travel",
     stock: "Stock",
     bond: "Bond",
     crypto: "Crypto",

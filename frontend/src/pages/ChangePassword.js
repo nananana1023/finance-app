@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import Header from "../components/Header";
+import { Eye, EyeOff } from "lucide-react";
 
 const ChangePassword = () => {
   const navigate = useNavigate();
@@ -10,6 +11,8 @@ const ChangePassword = () => {
     old_password: "",
     new_password: "",
   });
+  const [showPassword, setShowPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
 
   const [password, setPassword] = useState("");
   const [showPasswordValidation, setShowPasswordValidation] = useState(false);
@@ -80,10 +83,10 @@ const ChangePassword = () => {
         {error && <div className="alert alert-danger">{error}</div>}
 
         <form onSubmit={handleSubmit}>
-          <div className="mb-3">
+          <div className="position-relative mb-3">
             <label>Old Password</label>
             <input
-              type="password"
+              type={showPassword ? "text" : "password"}
               name="old_password"
               value={formData.old_password}
               onChange={(e) =>
@@ -92,17 +95,43 @@ const ChangePassword = () => {
               required
               className="form-control"
             />
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              className="btn btn-link position-absolute"
+              style={{
+                right: "10px",
+                top: "calc(50% + 9px)",
+                transform: "translateY(-50%)",
+                fontSize: "16px",
+              }}
+            >
+              {showPassword ? <Eye size={20} /> : <EyeOff size={20} />}
+            </button>
           </div>
-          <div className="mb-3">
+          <div className="position-relative mb-3">
             <label>New Password</label>
             <input
-              type="password"
+              type={showNewPassword ? "text" : "password"}
               name="new_password"
               value={password}
               onChange={(e) => checkPasswordStrength(e.target.value)}
               required
               className="form-control"
             />
+            <button
+              type="button"
+              onClick={() => setShowNewPassword(!showNewPassword)}
+              className="btn btn-link position-absolute"
+              style={{
+                right: "10px",
+                top: "calc(50% + 9px)",
+                transform: "translateY(-50%)",
+                fontSize: "16px",
+              }}
+            >
+              {showNewPassword ? <Eye size={20} /> : <EyeOff size={20} />}
+            </button>
           </div>
           {showPasswordValidation && (
             <div className="password-validation">

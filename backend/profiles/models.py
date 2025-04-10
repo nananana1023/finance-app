@@ -52,7 +52,7 @@ class UserFinancialProfile(models.Model):
 class Transaction(models.Model):
     INCOME_SUBCATEGORIES = ["salary", "allowance", "investment_gain", "stipend", "sale_proceeds", "dividend", "other"]
     EXPENSE_SUBCATEGORIES = ["grocery", "restaurant", "entertainment", "healthcare", "utility", "subscription", "gift",
-                             "self_care", "housing", "clothes", "miscellaneous"]
+                             "self_care", "housing", "clothes", "miscellaneous","travel"]
     SAVINGS_INVESTMENT_SUBCATEGORIES = ["stock", "bond", "crypto", "fund", "real_estate", "savings"]
 
     CATEGORY_CHOICES = [
@@ -62,12 +62,11 @@ class Transaction(models.Model):
     ]
     
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
-    category = models.CharField(max_length=20, choices=CATEGORY_CHOICES, blank=True)  # Auto filled by serializer
+    category = models.CharField(max_length=20, choices=CATEGORY_CHOICES, blank=True) 
     subcategory = models.CharField(max_length=30)
     amount = models.DecimalField(max_digits=10, decimal_places=2, validators=[validate_positive])
     date = models.DateField()
-    note = models.TextField(blank=True, null=True) #optional
-    merchant = models.CharField(max_length=255, blank=True, default="")   #optional
+    note = models.TextField(blank=True, null=True)  
     recurring=models.BooleanField(default=False)
     nextOccur = models.DateField(blank=True, null=True)
     

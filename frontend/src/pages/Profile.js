@@ -10,7 +10,6 @@ const Profile = () => {
   const { CURRENCY_SYMBOLS, user, logoutUser, loading } =
     useContext(AuthContext);
   const navigate = useNavigate();
-  //const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [successMessage, setSuccessMessage] = useState("");
   const [formError, setFormError] = useState("");
@@ -61,6 +60,25 @@ const Profile = () => {
       return () => clearTimeout(timer);
     }
   }, [location.state]);
+
+  useEffect(() => {
+    if (location.state && location.state.message) {
+      setSuccessMessage(location.state.message);
+      const timer = setTimeout(() => {
+        setSuccessMessage("");
+      }, 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [location.state]);
+
+  useEffect(() => {
+    if (successMessage) {
+      const timer = setTimeout(() => {
+        setSuccessMessage("");
+      }, 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [successMessage]);
 
   const handleEdit = () => {
     setUpdatedProfile({
@@ -130,6 +148,7 @@ const Profile = () => {
       }}
     >
       <Header />
+
       <Container className="py-5">
         <Row className="justify-content-center">
           <Col md={8}>

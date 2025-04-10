@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import Header from "../components/Header";
+import { Eye, EyeOff } from "lucide-react";
 
 const ChangeUsername = () => {
   const navigate = useNavigate();
@@ -10,7 +11,7 @@ const ChangeUsername = () => {
     old_password: "",
     new_username: "",
   });
-
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
 
@@ -57,10 +58,10 @@ const ChangeUsername = () => {
           </div>
         )}
         <form onSubmit={handleSubmit}>
-          <div className="mb-3">
+          <div className="position-relative mb-3">
             <label>Password</label>
             <input
-              type="password"
+              type={showPassword ? "text" : "password"}
               name="old_password"
               value={formData.old_password}
               onChange={(e) =>
@@ -69,6 +70,19 @@ const ChangeUsername = () => {
               required
               className="form-control"
             />
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              className="btn btn-link position-absolute"
+              style={{
+                right: "10px",
+                top: "calc(50% + 9px)",
+                transform: "translateY(-50%)",
+                fontSize: "16px",
+              }}
+            >
+              {showPassword ? <Eye size={20} /> : <EyeOff size={20} />}
+            </button>
           </div>
           <div className="mb-3">
             <label>New Username</label>

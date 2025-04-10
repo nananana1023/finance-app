@@ -22,6 +22,7 @@ const EXPENSE_SUBCATEGORIES = [
   "housing",
   "clothes",
   "miscellaneous",
+  "travel",
 ];
 const SAVINGS_INVESTMENT_SUBCATEGORIES = [
   "stock",

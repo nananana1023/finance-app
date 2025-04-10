@@ -9,6 +9,7 @@ const Register = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [message, setMessage] = useState("");
 
   const [passwordChecks, setPasswordChecks] = useState({
     length: false,
@@ -161,6 +162,21 @@ const Register = () => {
       });
     } catch (error) {
       setError(error.response?.data?.message || "Invalid verification code.");
+    }
+  };
+
+  const handleResenCode = async (e) => {
+    e.preventDefault();
+    try {
+      await axios.post(
+        "http://127.0.0.1:8000/auth/request-verification-code/",
+        { email }
+      );
+      setMessage("A new verification code has been sent to your email.");
+    } catch (error) {
+      setError(
+        error.response?.data?.message || "Failed to send verification code."
+      );
     }
   };
 
@@ -339,6 +355,16 @@ const Register = () => {
                     Verify Code
                   </button>
                 </form>
+                <button
+                  onClick={handleResenCode}
+                  type="button"
+                  className="btn btn-secondary w-100 mt-3"
+                >
+                  Re-send Verification Code
+                </button>
+                {message && (
+                  <div className="alert alert-success mt-3">{message}</div>
+                )}
               </>
             )}
             {error && <p style={{ color: "red" }}>{error}</p>}

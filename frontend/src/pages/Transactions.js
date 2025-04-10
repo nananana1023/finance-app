@@ -663,6 +663,7 @@ const Transactions = () => {
                       <option value="housing">Housing</option>
                       <option value="clothes">Clothes</option>
                       <option value="miscellaneous">Miscellaneous</option>
+                      <option value="travel">Travel</option>
                     </optgroup>
                     <optgroup label="Savings & Investment">
                       <option value="stock">Stock</option>
@@ -966,6 +967,7 @@ const Transactions = () => {
                       <option value="housing">Housing</option>
                       <option value="clothes">Clothes</option>
                       <option value="miscellaneous">Miscellaneous</option>
+                      <option value="travel">Travel</option>
                     </optgroup>
                     <optgroup label="Savings & Investment">
                       <option value="stock">Stock</option>

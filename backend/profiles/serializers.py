@@ -52,7 +52,7 @@ class TransactionSerializer(serializers.ModelSerializer):
             "grocery": "expense", "restaurant": "expense", "entertainment": "expense",
             "healthcare": "expense", "utility": "expense", "subscription": "expense",
             "gift": "expense", "self_care": "expense", "housing": "expense",
-            "clothes": "expense", "miscellaneous": "expense",
+            "clothes": "expense", "miscellaneous": "expense", "travel": "expense",
 
             "stock": "savings_investment", "bond": "savings_investment",
             "crypto": "savings_investment", "fund": "savings_investment",
