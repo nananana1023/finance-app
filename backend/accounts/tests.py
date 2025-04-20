@@ -1,3 +1,42 @@
-from django.test import TestCase
+from rest_framework.test import APITestCase
+from django.contrib.auth import get_user_model
 
-# Create your tests here.
+User = get_user_model()
+
+class Login(APITestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(
+            username="test",
+            email="test@yahoo.com",
+            password="Asdf3*ertAD"
+        )
+
+    def test_login(self):
+        data = {
+            "username": "test",
+            "password": "Asdf3*ertAD"
+        }
+        response = self.client.post("/auth/login/", data)
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("access", response.data)
+        self.assertIn("refresh", response.data)
+
+class EmailValidation(APITestCase):
+    def test_validate_email(self):
+        response = self.client.post("/auth/validate-email/", {"email": "new@example.com"})
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data["valid"], True)
+
+class UserDetails(APITestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(
+            username="test",
+            email="test@yahoo.com",
+            password="Asdf3*ertAD"
+        )
+        self.client.force_authenticate(user=self.user)
+
+    def test_user_details(self):
+        response = self.client.get("/auth/user/")
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json()["username"], "test")

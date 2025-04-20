@@ -9,7 +9,7 @@ def process_recurring_transactions():
     today = timezone.localdate()
     transactions_due = Transaction.objects.filter(recurring=True, nextOccur=today)
     
-        # Create a new transaction with date=today and nextOccur=next month's today
+        # create a new transaction with date=today and nextOccur=next month's today
     for trans in transactions_due:
         Transaction.objects.create(
             user=trans.user,
@@ -26,7 +26,7 @@ def process_recurring_transactions():
     
 
 def calculate_next_occurrence(date_value):
-    # If the day is less than 28, keep the same day in the next month.
+    # if the day is less than 28, keep the same day in the next month.
     if date_value.day < 28:
         if date_value.month == 12:
             year = date_value.year + 1

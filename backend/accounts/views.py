@@ -29,7 +29,6 @@ def validate_email_view(request):
     except ValidationError:
         return Response({"valid": False, "message": "Enter a valid email address."}, status=400)
 
-    # Check if the email is already registered
     if User.objects.filter(email=email).exists():
         return Response({"valid": False, "message": "Email is already in use."}, status=400)
 
@@ -40,14 +39,12 @@ def validate_email_view(request):
 def validate_username_view(request):
     username = request.data.get("username", "")
 
-    # Check if username is already registered
     if User.objects.filter(username=username).exists():
         return Response({"valid": False, "message": "Username is already taken."}, status=400)
 
     return Response({"valid": True})
 
-# Temporary storage for verification codes
-pending_verifications = {}  #{ "email": {"code": "123456", "timestamp": 1700000000} }
+pending_verifications = {} 
 
 def generate_verification_code():
     return str(random.randint(100000, 999999))
@@ -59,9 +56,8 @@ def request_verification_code(request):
     username = request.data.get("username")
 
     verification_code = generate_verification_code()
-    timestamp = int(time.time())  # Current time in seconds
+    timestamp = int(time.time()) 
 
-    # Store the code temporarily (expires in 5 minutes)
     pending_verifications[email] = {"code": verification_code, "timestamp": timestamp}
     
     message = f"""
@@ -73,7 +69,6 @@ def request_verification_code(request):
     MoneySavvy Family 💸
     """
 
-    # Send email with the code
     send_mail(
         "Your Verification Code",
         message,
@@ -98,19 +93,18 @@ def verify_code(request):
         return Response({"message": "Invalid request. Please register again."}, status=400)
 
     stored_data = pending_verifications[email]
-    if current_time - stored_data["timestamp"] > 300:  # 5 minutes expiry
+    if current_time - stored_data["timestamp"] > 300: 
         del pending_verifications[email]
         return Response({"message": "Verification code expired. Please request a new one."}, status=400)
 
     if stored_data["code"] != code:
         return Response({"message": "Invalid verification code."}, status=400)
 
-    # If verification successful, create user
     user = User.objects.create_user(username=username, email=email, password=password)
     user.is_active = True 
     user.save()
 
-    del pending_verifications[email]  # Remove stored verification
+    del pending_verifications[email]  
 
     return Response({"message": "Email verified. Account created."}, status=201)
 
@@ -152,7 +146,6 @@ class ChangePasswordView(generics.UpdateAPIView):
     permission_classes = (permissions.IsAuthenticated,)
 
     def get_object(self, queryset=None):
-        #current authenticated user
         return self.request.user
 
     def update(self, request, *args, **kwargs):
@@ -160,11 +153,9 @@ class ChangePasswordView(generics.UpdateAPIView):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         
-        #verify old password
         if not user.check_password(serializer.validated_data.get("old_password")):
             return Response({"old_password": "Wrong password."}, status=status.HTTP_400_BAD_REQUEST)
         
-        #save new password
         user.set_password(serializer.validated_data.get("new_password"))
         user.save()
         return Response({"detail": "Password updated successfully"}, status=status.HTTP_200_OK)
@@ -198,7 +189,6 @@ class ChangeUsernameView(generics.UpdateAPIView):
                 status=status.HTTP_400_BAD_REQUEST
             )
         
-        # new username is already registered (exclude the user itself)
         if User.objects.filter(username=new_username).exclude(pk=user.pk).exists():
             return Response(
                 {"detail": "Username is already taken."},

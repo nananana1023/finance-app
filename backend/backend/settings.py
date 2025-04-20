@@ -21,11 +21,10 @@ CELERY_RESULT_BACKEND = "redis://localhost:6379/0"
 CELERY_BEAT_SCHEDULE = {
     "process-recurring-transactions-daily": {
         "task": "profiles.tasks.process_recurring_transactions",
-        "schedule": crontab(hour=0, minute=0),  # Runs every day at midnight
+        "schedule": crontab(hour=0, minute=0),  # runs at every midnight
     },
 }
 
-# Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 
@@ -39,9 +38,6 @@ SECRET_KEY = 'django-insecure-$n!-j6nlwu4sgrk$b&j8kx!b&k#0+i0box9o&r(=e%+&$@n8q=
 DEBUG = True
 
 ALLOWED_HOSTS = []
-
-
-# Application definition
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -66,11 +62,11 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'corsheaders.middleware.CorsMiddleware', #Allows React to interact with Django.
+    'corsheaders.middleware.CorsMiddleware', 
 ]
 
 CORS_ALLOWED_ORIGINS = [
-    "http://localhost:3000",  # React frontend
+    "http://localhost:3000",  
 ]
 
 ROOT_URLCONF = 'backend.urls'
@@ -153,7 +149,6 @@ STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-# Configure Django Rest Framework
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework_simplejwt.authentication.JWTAuthentication',
@@ -170,7 +165,6 @@ REST_FRAMEWORK = {
 }
 
 
-# Email sending
 EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
 EMAIL_HOST = "smtp.gmail.com"  
 EMAIL_PORT = 587

@@ -25,7 +25,7 @@ class UserFinancialProfileViewSet(viewsets.ModelViewSet):
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         if not serializer.is_valid():
-            # Return serializer errors (with your custom messages) as JSON
+            # return errors as json
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         self.perform_create(serializer)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
@@ -61,7 +61,7 @@ class TransactionViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data)
 
-#Filters transactions by selected month and user.
+#filters transactions by selected month and user.
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def monthly_summary(request, year, month):
@@ -231,7 +231,6 @@ class FileUploadView(APIView):
                 continue
         
         if errors:
-            # Return a 200 response indicating partial success along with error details.
             return Response({
                 'message': f'{created} transactions created successfully.',
                 'errors': errors
