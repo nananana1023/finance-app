@@ -23,9 +23,13 @@ class Login(APITestCase):
 
 class EmailValidation(APITestCase):
     def test_validate_email(self):
-        response = self.client.post("/auth/validate-email/", {"email": "new@example.com"})
+        response = self.client.post("/auth/validate-email/", {"email": "test@yahoo.com"})
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.data["valid"], True)
+        
+        response2 = self.client.post("/auth/validate-email/", {"email": "te@j.p"})
+        self.assertEqual(response2.status_code, 400)
+        self.assertEqual(response2.data["valid"], False)
 
 class UserDetails(APITestCase):
     def setUp(self):

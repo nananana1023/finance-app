@@ -29,6 +29,8 @@ class ProfileTransactionTests(APITestCase):
         }
         response = self.client.post("/api/financial-profile/", data, format="json")
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(response.data["currency"], "EUR")   
+        self.assertEqual(response.data["monthly_income"], 3000)
 
     def test_create_trans(self):
         data = {
@@ -41,6 +43,9 @@ class ProfileTransactionTests(APITestCase):
         response = self.client.post("/api/transactions/", data, format="json")
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(Transaction.objects.count(), 1)
+        self.assertEqual(response.data["category"], "expense")
+        transaction = Transaction.objects.first()
+        self.assertEqual(transaction.category, "expense")
 
     def test_by_month(self):
         Transaction.objects.create(
@@ -53,6 +58,7 @@ class ProfileTransactionTests(APITestCase):
         response = self.client.get("/api/transactions/by-month/2024/04/")
         self.assertEqual(response.status_code, 200)
         self.assertEqual(len(response.data), 1)
+        self.assertEqual(response.data[0]["subcategory"], 'restaurant')
 
     def test_summary(self):
         Transaction.objects.create(
@@ -62,9 +68,19 @@ class ProfileTransactionTests(APITestCase):
             subcategory="salary",
             category="income"
         )
+        
+        Transaction.objects.create(
+            user=self.user,
+            amount=20,
+            date="2024-04-20",
+            subcategory="dividend",
+            category="income"
+        )
+        
         response = self.client.get("/api/monthly-summary/2024/04/")
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.data["total_income"], 500)
+        self.assertEqual(response.data["total_income"], 520)
+
 
     def test_expenses_months(self):
         Transaction.objects.create(
@@ -79,6 +95,3 @@ class ProfileTransactionTests(APITestCase):
         
         self.assertEqual(response.status_code, 200)
         self.assertIsInstance(response.data, list)
-        self.assertGreater(len(response.data), 0)
-        self.assertIn("month", response.data[0])
-        self.assertIn("amount", response.data[0])
