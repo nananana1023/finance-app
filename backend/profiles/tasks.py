@@ -18,7 +18,6 @@ def process_recurring_transactions():
             amount=trans.amount,
             date=today,
             note=trans.note,
-            merchant=trans.merchant,
             recurring=trans.recurring,
             nextOccur=calculate_next_occurrence(today)
         )

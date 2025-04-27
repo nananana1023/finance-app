@@ -5,6 +5,7 @@ from profiles.models import UserFinancialProfile, Transaction
 from django.urls import reverse
 from datetime import datetime
 from django.utils.timezone import make_aware
+from profiles.tasks import calculate_next_occurrence, process_recurring_transactions
 
 User = get_user_model()
 
@@ -95,3 +96,94 @@ class ProfileTransactionTests(APITestCase):
         
         self.assertEqual(response.status_code, 200)
         self.assertIsInstance(response.data, list)
+
+    def test_sum_subcat(self):
+        Transaction.objects.create(
+            user=self.user,
+            amount=100,
+            date="2024-04-10",
+            subcategory="grocery",
+            category="expense"
+        )
+        response = self.client.get("/api/sum-subcategories-month/2024/04/")
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(len(response.data), 1)
+        self.assertEqual(response.data[0]['subcategory'], "grocery")
+        self.assertEqual(response.data[0]['total_amount'], 100)
+
+    def test_avg_subcat(self):
+        Transaction.objects.create(
+            user=self.user,
+            amount=120,
+            date="2024-03-10",
+            subcategory="restaurant",
+            category="expense"
+        )
+        Transaction.objects.create(
+            user=self.user,
+            amount=180,
+            date="2024-04-10",
+            subcategory="restaurant",
+            category="expense"
+        )
+        response = self.client.get("/api/avg-subcategories/")
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(any(d['subcategory'] == 'restaurant' for d in response.data))
+
+    def test_next_occur(self):
+        date = datetime(2024, 4, 10).date()
+        next_date = calculate_next_occurrence(date)
+        self.assertEqual(next_date.month, 5)
+        self.assertEqual(next_date.day, 10)
+
+    def test_recur_trans(self):
+        today = datetime.now().date()
+        next_occur = calculate_next_occurrence(today)
+        Transaction.objects.create(
+            user=self.user,
+            amount=50,
+            date=today,
+            subcategory="subscription",
+            category="expense",
+            recurring=True,
+            nextOccur=today
+        )
+        process_recurring_transactions()
+
+        self.assertEqual(Transaction.objects.filter(date=today).count(), 2)
+        new_trans = Transaction.objects.filter(date=today).last()
+        self.assertEqual(new_trans.nextOccur, next_occur)
+
+
+    def test_invalid_trans(self):
+        data = {
+            "date": "2024-04-10",
+            "amount": 100,
+            "subcategory": "kkk",
+            "recurring": False
+        }
+        response = self.client.post("/api/transactions/", data, format="json")
+        self.assertEqual(response.status_code, 400)
+        self.assertIn("Invalid subcategory", str(response.data))
+
+    def test_upload_no_file(self):
+        response = self.client.post("/api/upload/", {}, format='multipart')
+        self.assertEqual(response.status_code, 400)
+        self.assertIn('No file provided', str(response.data))
+
+    def test_goal_greater_income(self):
+        data = {
+            "currency": "USD",
+            "country": "USA",
+            "monthly_income": 2000,
+            "monthly_spending_goal": 3000,  
+            "first_name": "Jane",
+            "last_name": "Doe",
+            "age_range": "25-34",
+            "gender": "Female",
+            "future_goals": ["Save for house"],
+            "savings_percent": "20%"
+        }
+        response = self.client.post("/api/financial-profile/", data, format="json")
+        self.assertEqual(response.status_code, 400)
+        self.assertIn("Monthly spending goal can't be more than the income", str(response.data))
