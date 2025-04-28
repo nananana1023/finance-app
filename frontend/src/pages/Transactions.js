@@ -147,7 +147,7 @@ const Transactions = () => {
         recurring: newTransaction.recurring,
       });
       setTransactions([...transactions, response.data]);
-      setActiveTab(null); // close the modal
+      setActiveTab(null);
 
       if (newTransaction.recurring) {
         let day = new Date(newTransaction.date).getDate();
@@ -373,7 +373,6 @@ const Transactions = () => {
   if (loading) return <p>Loading transactions...</p>;
   if (error) return <p style={{ color: "red" }}>{error}</p>;
 
-  // Modal overlay style
   const modalOverlayStyle = {
     position: "fixed",
     top: 0,
@@ -397,7 +396,7 @@ const Transactions = () => {
     >
       <Header />
       <Container className="py-5">
-        {/* Monthly Spending and Month Selector */}
+        {/*month selector */}
         <Row className="mb-4">
           <Col>
             <h3>
@@ -421,7 +420,7 @@ const Transactions = () => {
           </Button>
         </InputGroup>
 
-        {/* Spending Bar Chart */}
+        {/* bar chart*/}
         {profile && profile.monthly_spending_goal && (
           <Row className="mb-5">
             <Col className="d-flex justify-content-center">
@@ -529,7 +528,7 @@ const Transactions = () => {
           </Row>
         )}
 
-        {/* Success Message */}
+        {/* message */}
         {successMessage && (
           <Row className="mb-4">
             <Col>
@@ -540,7 +539,7 @@ const Transactions = () => {
           </Row>
         )}
 
-        {/*modal buttons */}
+        {/* add trans buttons */}
         <Row className="mb-5">
           <Col className="d-flex justify-content-center">
             <Button
@@ -570,7 +569,7 @@ const Transactions = () => {
           </Col>
         </Row>
 
-        {/* File Upload */}
+        {/* file upload */}
         {activeTab === "upload" && (
           <div style={modalOverlayStyle}>
             <Card
@@ -604,7 +603,7 @@ const Transactions = () => {
           </div>
         )}
 
-        {/*Add Transaction  */}
+        {/* add transaction */}
         {activeTab === "manual" && (
           <div style={modalOverlayStyle}>
             <Card
@@ -862,7 +861,7 @@ const Transactions = () => {
           </div>
         )}
 
-        {/* Transactions */}
+        {/* table */}
         <Row>
           <h3>
             <strong>Your Transactions</strong>
@@ -895,7 +894,8 @@ const Transactions = () => {
             </Button>
           </Col>
         </Row>
-        {/* Edit Transaction */}
+
+        {/* edit transaction */}
         {selectedTransaction && (
           <div
             style={{
@@ -1154,6 +1154,7 @@ const Transactions = () => {
                   >
                     Save
                   </Button>
+                  {/* delete */}
                   <Button variant="danger" onClick={handleDeleteTransaction}>
                     Delete
                   </Button>

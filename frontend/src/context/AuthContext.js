@@ -83,7 +83,7 @@ export const AuthProvider = ({ children }) => {
           console.log("Refreshing token");
           const newToken = await refreshAccessToken();
           if (newToken) {
-            setToken(newToken); // update token state so the effect re-runs
+            setToken(newToken);
             try {
               const retryResponse = await axios.get(
                 "http://127.0.0.1:8000/auth/user/",
@@ -142,7 +142,7 @@ export const AuthProvider = ({ children }) => {
         logoutUser,
         SUBCATEGORY_MAPPING,
         authMessage,
-        setToken, // Expose setToken so login can update it if needed
+        setToken,
       }}
     >
       {children}

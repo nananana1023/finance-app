@@ -46,7 +46,6 @@ function PieChartContainer({ data }) {
         </Col>
       </Row>
 
-      {/* pie chart */}
       <Row>
         <Col md={8}>
           <div

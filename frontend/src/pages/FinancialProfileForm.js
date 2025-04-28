@@ -16,7 +16,6 @@ const FinancialProfileForm = ({ onSuccess }) => {
     future_goals: [],
   });
 
-  // State to hold any error message we want to display
   const [errorMessage, setErrorMessage] = useState("");
 
   const EUROPEAN_COUNTRIES = [
@@ -78,7 +77,6 @@ const FinancialProfileForm = ({ onSuccess }) => {
     }
   };
 
-  // Helper function to process and display meaningful error messages
   const processErrorMessage = (error) => {
     const data = error.response?.data;
     if (data?.non_field_errors && Array.isArray(data.non_field_errors)) {

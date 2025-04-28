@@ -8,14 +8,14 @@ describe("Profile Page", () => {
     cy.get('input[placeholder="Password"]').type("Polokolo0)");
     cy.get("button").contains("Log In").click();
 
-    //profile page
+    //profile
     cy.get("nav").within(() => {
       cy.contains("Profile").click();
     });
     cy.wait(1000);
     cy.url().should("include", "/profile");
 
-    //edit fin prof
+    //edit financial prof
     cy.contains("Financial Profile").click();
     cy.contains("Monthly Income:").should("exist");
     cy.contains("Edit").click();
@@ -28,7 +28,7 @@ describe("Profile Page", () => {
       "be.visible"
     );
 
-    //user prof
+    //user profile
     cy.contains("User Profile").click();
     cy.contains("Change Password").click();
     cy.url().should("include", "/change-password");

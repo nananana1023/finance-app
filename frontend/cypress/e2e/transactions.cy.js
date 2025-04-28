@@ -8,7 +8,7 @@ describe("Transactions Page", () => {
     cy.get('input[placeholder="Password"]').type("Polokolo0)");
     cy.get("button").contains("Log In").click();
 
-    //add trans card
+    //add trans
     cy.get("nav").within(() => {
       cy.contains("Transactions").click();
     });

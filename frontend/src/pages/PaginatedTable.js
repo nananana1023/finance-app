@@ -33,7 +33,6 @@ const filterTransactions = (groupedTransactions, filters) => {
     }
     const filteredTransactions = groupedTransactions[date].filter(
       (transaction) => {
-        // If subcategory filter is provided as a non-empty array, check if transaction's subcategory is included.
         if (filters.subcategory && filters.subcategory.length > 0) {
           const transactionSubcat = transaction.subcategory.toLowerCase();
           const selectedSubcats = filters.subcategory.map((sub) =>

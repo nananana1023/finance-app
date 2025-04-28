@@ -31,7 +31,6 @@ const Insights = () => {
   const currentDate = new Date().getDate();
 
   useEffect(() => {
-    // Fetch average expense per subcategory
     const fetchAvgAmounts = async () => {
       try {
         const response = await api.get("avg-subcategories/");
@@ -138,15 +137,11 @@ const Insights = () => {
                 width={900}
                 height={300}
                 data={chartData}
-                // Reduce left and right margins so the bars start near the edge
                 margin={{ top: 20, right: 20, left: 20, bottom: 20 }}
-                // Controls spacing between bar groups
                 barCategoryGap="10%"
-                // Controls spacing between bars within a group
                 barGap={10}
               >
                 <CartesianGrid strokeDasharray="3 3" />
-                {/* Add or remove padding to move bars away from the chart edges */}
                 <XAxis dataKey="name" padding={{ left: 0, right: 0 }} />
                 <YAxis />
                 <Tooltip />

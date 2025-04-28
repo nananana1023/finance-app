@@ -30,9 +30,7 @@ const Profile = () => {
   };
 
   useEffect(() => {
-    // Wait until AuthContext has finished loading
     if (loading) return;
-    // If, after loading, user is still null, show an error or return early
     if (!user) {
       setError("User is not authenticated.");
       return;

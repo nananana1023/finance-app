@@ -55,14 +55,14 @@ class Transaction(models.Model):
                              "self_care", "housing", "clothes", "miscellaneous","travel"]
     SAVINGS_INVESTMENT_SUBCATEGORIES = ["stock", "bond", "crypto", "fund", "real_estate", "savings"]
 
-    CATEGORY_CHOICES = [
+    CATEGORIES = [
         ("income", "Income"),
         ("expense", "Expense"),
         ("savings_investment", "Savings & Investment"),
     ]
     
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
-    category = models.CharField(max_length=20, choices=CATEGORY_CHOICES, blank=True) 
+    category = models.CharField(max_length=20, choices=CATEGORIES, blank=True) 
     subcategory = models.CharField(max_length=30)
     amount = models.DecimalField(max_digits=10, decimal_places=2, validators=[validate_positive])
     date = models.DateField()

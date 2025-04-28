@@ -1,16 +1,13 @@
-/* Apply a smooth transition for the nav links and brand image */
 .navbar-nav .nav-link,
 .navbar-brand {
   transition: transform 0.3s ease, color 0.3s ease;
 }
 
-/* Slightly scale up and change color on hover for nav links */
 .navbar-nav .nav-link:hover {
   transform: scale(1.05);
-  color: #ffffff; /* Change to a contrasting color if needed */
+  color: #ffffff;
 }
 
-/* Animate the brand image on hover (e.g., a gentle rotation) */
 .navbar-brand img {
   transition: transform 0.3s ease;
 }

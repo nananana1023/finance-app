@@ -78,12 +78,10 @@ const FilterCard = ({
       }}
     >
       <div className="row mb-2">
-        {/* Category Dropdown */}
         <div className="col-md-3 mb-2">
           <select
             value={filters.category}
             onChange={(e) =>
-              // Reset subcategory selections when category changes.
               setFilters({
                 ...filters,
                 category: e.target.value,
@@ -103,7 +101,6 @@ const FilterCard = ({
           </select>
         </div>
 
-        {/* Multi-Select Dropdown for Subcategories */}
         <div className="col-md-3 mb-2">
           <div className="position-relative">
             <button
@@ -149,7 +146,6 @@ const FilterCard = ({
           </div>
         </div>
 
-        {/* Min Amount */}
         <div className="col-md-3 mb-2">
           <input
             type="number"
@@ -162,7 +158,6 @@ const FilterCard = ({
           />
         </div>
 
-        {/* Max Amount */}
         <div className="col-md-3 mb-2">
           <input
             type="number"
@@ -177,7 +172,6 @@ const FilterCard = ({
       </div>
 
       <div className="row align-items-end">
-        {/* Date Range - From */}
         <div className="col-md-3 mb-2">
           <label htmlFor="minDate" className="ms-2">
             From:{" "}
@@ -192,7 +186,6 @@ const FilterCard = ({
             className="form-control"
           />
         </div>
-        {/* Date Range - Until */}
         <div className="col-md-3 mb-2">
           <label htmlFor="maxDate" className="ms-2">
             Until:{" "}
@@ -207,7 +200,6 @@ const FilterCard = ({
             className="form-control"
           />
         </div>
-        {/* Search Button */}
         <div className="col-md-3 mb-2">
           <button
             onClick={handleApplyFilters}
@@ -221,7 +213,6 @@ const FilterCard = ({
             Search
           </button>
         </div>
-        {/* Clear All Button */}
         <div className="col-md-3 mb-2">
           <button
             onClick={handleResetFilters}

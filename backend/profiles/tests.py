@@ -1,11 +1,10 @@
 from rest_framework.test import APITestCase
 from rest_framework import status
 from django.contrib.auth import get_user_model
-from profiles.models import UserFinancialProfile, Transaction
-from django.urls import reverse
+from profiles.models import Transaction
 from datetime import datetime
 from django.utils.timezone import make_aware
-from profiles.tasks import calculate_next_occurrence, process_recurring_transactions
+from profiles.tasks import calculate_nextOccur, process_recurring_transactions
 
 User = get_user_model()
 
@@ -132,13 +131,13 @@ class ProfileTransactionTests(APITestCase):
 
     def test_next_occur(self):
         date = datetime(2024, 4, 10).date()
-        next_date = calculate_next_occurrence(date)
+        next_date = calculate_nextOccur(date)
         self.assertEqual(next_date.month, 5)
         self.assertEqual(next_date.day, 10)
 
     def test_recur_trans(self):
         today = datetime.now().date()
-        next_occur = calculate_next_occurrence(today)
+        next_occur = calculate_nextOccur(today)
         Transaction.objects.create(
             user=self.user,
             amount=50,
@@ -164,7 +163,7 @@ class ProfileTransactionTests(APITestCase):
         }
         response = self.client.post("/api/transactions/", data, format="json")
         self.assertEqual(response.status_code, 400)
-        self.assertIn("Invalid subcategory", str(response.data))
+        self.assertIn("Please choose a valid subcategory", str(response.data))
 
     def test_upload_no_file(self):
         response = self.client.post("/api/upload/", {}, format='multipart')

@@ -23,7 +23,7 @@ const Register = () => {
   const [emailError, setEmailError] = useState("");
   const [showPasswordValidation, setShowPasswordValidation] = useState(false);
   const [usernameError, setUsernameError] = useState("");
-  const [step, setStep] = useState(1); // register then verify Code
+  const [step, setStep] = useState(1); // 1 register, 2 verify Code
   const [verificationCode, setVerificationCode] = useState("");
   const navigate = useNavigate();
 
@@ -100,7 +100,6 @@ const Register = () => {
       setEmailError("");
     }
 
-    // request to validate email
     try {
       const response = await axios.post(
         "http://127.0.0.1:8000/auth/validate-email/",
@@ -108,7 +107,7 @@ const Register = () => {
       );
 
       if (response.data.valid === false) {
-        setEmailError(response.data.message); // django message
+        setEmailError(response.data.message);
       } else {
         setEmailError("");
       }
@@ -137,7 +136,7 @@ const Register = () => {
           email,
         }
       );
-      setStep(2); // Move to verification step
+      setStep(2);
     } catch (error) {
       setError(
         error.response?.data?.message || "Failed to send verification code."

@@ -12,7 +12,7 @@ from rest_framework.views import APIView
 import pandas as pd
 from rest_framework import status
 from rest_framework.parsers import MultiPartParser, FormParser
-from io import BytesIO
+from io import BytesIO, StringIO
 
 class UserFinancialProfileViewSet(viewsets.ModelViewSet):
     queryset = UserFinancialProfile.objects.all()
@@ -25,7 +25,6 @@ class UserFinancialProfileViewSet(viewsets.ModelViewSet):
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         if not serializer.is_valid():
-            # return errors as json
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         self.perform_create(serializer)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
@@ -61,7 +60,7 @@ class TransactionViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data)
 
-#filters transactions by selected month and user.
+#filters transactions by selected month and user
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def monthly_summary(request, year, month):
@@ -115,22 +114,18 @@ def sum_subcategories_month(request, year, month):
         .annotate(total_amount=Sum('amount'))
     )
 
-    # only keep nonzero sums
     sums = [entry for entry in sums if entry['total_amount'] > 0]
-
     return Response(sums)
 
 #average of all subcategories until it was 0 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
-def avg_subcategories(request):
-    
+def avg_subcategories(request):    
     user = request.user
     now = datetime.now()
     cur_year = now.year
     cur_month = now.month
 
-    # subcategories 
     subcategories = Transaction.objects.filter(
         user=user, 
         category="expense"
@@ -145,7 +140,6 @@ def avg_subcategories(request):
         temp_month = cur_month
         
         while True:
-            # monthly sum for this subcat
             monthly_total = Transaction.objects.filter(
                 user=user,
                 date__year=temp_year,
@@ -154,23 +148,19 @@ def avg_subcategories(request):
                 subcategory=subcat
             ).aggregate(total=Sum('amount'))['total'] or 0
 
-            # until sum was 0
             if monthly_total == 0:
                 break
 
             total_amount += monthly_total
             count += 1
-            
-           # print(f"cat: {subcat} current month total: {monthly_total} total: {total_amount} count: {count}")
 
-            # Move to previous month
             if temp_month == 1:
                 temp_year -= 1
                 temp_month = 12
             else:
                 temp_month -= 1
 
-        avg = total_amount / count if count > 0 else 0
+        avg = total_amount/count if count > 0 else 0
         output.append({
             "subcategory": subcat,
             "average": avg
@@ -187,13 +177,22 @@ class FileUploadView(APIView):
             return Response({'error': 'No file provided.'}, status=status.HTTP_400_BAD_REQUEST)
         
         try:
+            file_name = file.name 
             file_bytes = file.read()
-            stream = BytesIO(file_bytes)
-            df = pd.read_excel(stream)
-            df.columns = df.columns.str.strip() 
-            print("Excel columns:", df.columns.tolist())
+
+            if file_name.endswith('.csv'):
+                stream = StringIO(file_bytes.decode('utf-8'))
+                df = pd.read_csv(stream)
+            elif file_name.endswith(('.xls', '.xlsx')):
+                stream = BytesIO(file_bytes)
+                df = pd.read_excel(stream)
+            else:
+                return Response({'error': 'Unsupported file type.'}, status=status.HTTP_400_BAD_REQUEST)
+            
+            df.columns = df.columns.str.strip()
+            
         except Exception as e:
-            return Response({'error': 'Invalid Excel file.'}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({'error': 'Invalid file.'}, status=status.HTTP_400_BAD_REQUEST)
         
         required_columns = ['Date', 'Note', 'Amount', 'Category']
         if not all(col in df.columns for col in required_columns):

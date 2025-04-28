@@ -1,18 +1,15 @@
 from django.contrib.auth import get_user_model
 from rest_framework.response import Response
 from rest_framework import generics, permissions, status
-from rest_framework.decorators import api_view
+from rest_framework.decorators import api_view, api_view, permission_classes, permission_classes
 from django.core.validators import validate_email
 from django.core.exceptions import ValidationError
 import random
 from django.core.mail import send_mail
 import time
 from rest_framework_simplejwt.tokens import RefreshToken
-from rest_framework.permissions import IsAuthenticated
-from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import IsAuthenticated, AllowAny
 from django.http import JsonResponse
-from rest_framework.permissions import AllowAny
-from rest_framework.decorators import permission_classes
 from .serializers import ChangePasswordSerializer
 
 
@@ -30,7 +27,7 @@ def validate_email_view(request):
         return Response({"valid": False, "message": "Enter a valid email address."}, status=400)
 
     if User.objects.filter(email=email).exists():
-        return Response({"valid": False, "message": "Email is already in use."}, status=400)
+        return Response({"valid": False, "message": "Email is already registered."}, status=400)
 
     return Response({"valid": True}) 
 
@@ -46,24 +43,22 @@ def validate_username_view(request):
 
 pending_verifications = {} 
 
-def generate_verification_code():
+def generate_code():
     return str(random.randint(100000, 999999))
 
 @api_view(["POST"])
 @permission_classes([AllowAny])
 def request_verification_code(request):
     email = request.data.get("email")
-    username = request.data.get("username")
-
-    verification_code = generate_verification_code()
+    code = generate_code()
     timestamp = int(time.time()) 
 
-    pending_verifications[email] = {"code": verification_code, "timestamp": timestamp}
+    pending_verifications[email] = {"code": code, "timestamp": timestamp}
     
     message = f"""
     Dear customer!
     
-    Your verification code is: {verification_code}
+    Your verification code is: {code}
     
     Kind regards,  
     MoneySavvy Family 💸
@@ -93,7 +88,7 @@ def verify_code(request):
         return Response({"message": "Invalid request. Please register again."}, status=400)
 
     stored_data = pending_verifications[email]
-    if current_time - stored_data["timestamp"] > 300: 
+    if current_time - stored_data["timestamp"] > 300: # 5 min
         del pending_verifications[email]
         return Response({"message": "Verification code expired. Please request a new one."}, status=400)
 
@@ -106,7 +101,7 @@ def verify_code(request):
 
     del pending_verifications[email]  
 
-    return Response({"message": "Email verified. Account created."}, status=201)
+    return Response({"message": "Account created successfully."}, status=201)
 
 class LoginView(generics.GenericAPIView):
     permission_classes = [permissions.AllowAny]

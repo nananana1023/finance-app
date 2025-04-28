@@ -64,7 +64,6 @@ const UserHome = () => {
           {value}
         </text>
 
-        {/* show year below january */}
         {value === "January" && (
           <text x={0} y={0} dy={32} textAnchor="middle" fill="#666">
             {currentDataItem?.year}
@@ -84,7 +83,7 @@ const UserHome = () => {
     >
       <Header />
 
-      {/* Success Message */}
+      {/* message */}
       {location.state?.message && (
         <Row className="mb-4">
           <Col>
@@ -95,7 +94,7 @@ const UserHome = () => {
         </Row>
       )}
 
-      {/* Line Chart: Total Spent */}
+      {/* total line chart */}
       <Row className="my-4">
         <Col md={{ span: 8, offset: 2 }}>
           <h3 className="text-center">
@@ -147,7 +146,7 @@ const UserHome = () => {
         </Col>
       </Row>
 
-      {/* Month Selector */}
+      {/* month selector */}
       <Row className="my-4 justify-content-center">
         <Col xs="auto">
           <InputGroup style={{ maxWidth: "300px" }}>
@@ -173,7 +172,7 @@ const UserHome = () => {
       </Row>
 
       <Row className="my-4 mx-5">
-        {/* Cashflow Bar Chart */}
+        {/* cashflow bar chart */}
         <Col md={6}>
           <h3 className="text-center">
             <strong>Cash Flow</strong>
@@ -209,7 +208,7 @@ const UserHome = () => {
           )}
         </Col>
 
-        {/* Pie Chart */}
+        {/* pie chart */}
         <Col md={6}>
           <h3 className="text-center">
             <strong>Transactions by Categories</strong>

@@ -1,7 +1,6 @@
-// auth.js
 import axios from "axios";
 
-let refreshingTokenPromise = null;
+let refreshingToken = null;
 
 export const refreshAccessToken = async () => {
   const refreshToken = localStorage.getItem("refreshToken");
@@ -11,12 +10,11 @@ export const refreshAccessToken = async () => {
     return null;
   }
 
-  // If a refresh is already in progress, return that promise
-  if (refreshingTokenPromise) {
-    return refreshingTokenPromise;
+  if (refreshingToken) {
+    return refreshingToken;
   }
 
-  refreshingTokenPromise = axios
+  refreshingToken = axios
     .post("http://127.0.0.1:8000/api/token/refresh/", { refresh: refreshToken })
     .then((response) => {
       console.log("New access token:", response.data.access);
@@ -31,8 +29,8 @@ export const refreshAccessToken = async () => {
       return null;
     })
     .finally(() => {
-      refreshingTokenPromise = null;
+      refreshingToken = null;
     });
 
-  return refreshingTokenPromise;
+  return refreshingToken;
 };

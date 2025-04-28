@@ -53,7 +53,7 @@ const Dashboard = () => {
     setProfile(true);
     navigate("/profile", {
       state: {
-        message: "Your financial profile has been set up successfully! ",
+        message: "Your financial profile has been set up successfully!",
       },
     });
   };
@@ -64,7 +64,7 @@ const Dashboard = () => {
   return (
     <div style={{ minHeight: "100vh", backgroundColor: "#E9E9DF" }}>
       {profile ? (
-        <p>Your financial profile is set up. Start exploring! </p>
+        <p>Your financial profile is set up. </p>
       ) : (
         <FinancialProfileForm onSuccess={handleProfileSubmit} />
       )}

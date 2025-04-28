@@ -56,7 +56,7 @@ const FileUpload = () => {
             type="file"
             className="form-control w-auto"
             id="transactionsFile"
-            accept=".xls,.xlsx"
+            accept=".xls,.xlsx,.csv"
             onChange={handleFileChange}
           />
         </Col>

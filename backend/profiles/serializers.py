@@ -20,6 +20,7 @@ class UserFinancialProfileSerializer(serializers.ModelSerializer):
         if income is None or goal is None or percent is None:
             return data
 
+        # validations for goal, income, save amount
         try:
             saveAmount = (int(percent[:2]) / 100) * income
         except Exception:
@@ -59,19 +60,16 @@ class TransactionSerializer(serializers.ModelSerializer):
             "real_estate": "savings_investment", "savings": "savings_investment",
         }
 
-
         category = SUBCATEGORY_TO_CATEGORY.get(subcategory)
 
         if not category:
-            raise serializers.ValidationError(f"Invalid subcategory '{subcategory}'. Please choose a valid subcategory.")
+            raise serializers.ValidationError(f"Please choose a valid subcategory.")
 
         data["category"] = category
         
         #recurring trans - auto populate nextOccur to next month's same day - handle edge cases 
-        
         if data.get("recurring") == True:
             date_value = data.get("date")
-            # If string, convert to date object
             if isinstance(date_value, str):
                 date_value = datetime.strptime(date_value, "%Y-%m-%d").date()
             
@@ -86,7 +84,6 @@ class TransactionSerializer(serializers.ModelSerializer):
                     day = date_value.day
                 next_occur = datetime(year, month, day).date()
             else:
-                # avoid nonexistent day in the future 
                 if date_value.month == 12:
                     year = date_value.year + 1
                     month = 1
