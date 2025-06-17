@@ -188,10 +188,7 @@ const Register = () => {
           style={{ backgroundColor: "#A5BB9F", animation: "fadeIn 1s" }}
         >
           <h1 style={{ fontWeight: 700 }}>MoneySavvy</h1>
-          <p>
-            <strong>MoneySavvy</strong> (adj.): Being aware and skilled at
-            managing money—knowing how to budget, save, and spend wisely.
-          </p>
+          <p>Know your money. Control your future.</p>
         </Col>
         <Col
           md={6}

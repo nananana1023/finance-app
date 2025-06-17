@@ -47,7 +47,10 @@ const Login = () => {
           }}
         >
           <h1 style={{ fontWeight: 700 }}>MoneySavvy</h1>
-          <p>Know your money. Control your future.</p>
+          <p>
+            <strong>MoneySavvy</strong> (adj.): Being aware and skilled at
+            managing money—knowing how to budget, save, and spend wisely.
+          </p>
         </Col>
 
         <Col

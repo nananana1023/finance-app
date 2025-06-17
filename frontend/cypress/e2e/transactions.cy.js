@@ -4,8 +4,8 @@ describe("Transactions Page", () => {
   it("add a record, filter transactions", () => {
     //log in
     cy.visit("/");
-    cy.get('input[placeholder="Username"]').type("nana1023");
-    cy.get('input[placeholder="Password"]').type("Polokolo0)");
+    cy.get('input[placeholder="Username"]').type("nana");
+    cy.get('input[placeholder="Password"]').type("Lkjklkjkl999(");
     cy.get("button").contains("Log In").click();
 
     //add trans

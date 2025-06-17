@@ -4,8 +4,8 @@ describe("Profile Page", () => {
   it("update user and financial profile forms", () => {
     //log in
     cy.visit("/");
-    cy.get('input[placeholder="Username"]').type("nana1023");
-    cy.get('input[placeholder="Password"]').type("Polokolo0)");
+    cy.get('input[placeholder="Username"]').type("nana");
+    cy.get('input[placeholder="Password"]').type("Lkjklkjkl999(");
     cy.get("button").contains("Log In").click();
 
     //profile

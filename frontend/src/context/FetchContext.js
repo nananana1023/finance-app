@@ -32,6 +32,7 @@ export const FetchProvider = ({ children }) => {
     try {
       const response = await api.get("expenses-months/");
       setTotalExpenses(response.data);
+      console.log(response.data);
     } catch (error) {
       console.error("Error fetching expenses over months:", error);
     }

@@ -5,8 +5,8 @@ describe("Login and Overview Page", () => {
     cy.visit("/");
     //login
     cy.contains("Log In").should("exist");
-    cy.get('input[placeholder="Username"]').type("nana1023");
-    cy.get('input[placeholder="Password"]').type("Polokolo0)");
+    cy.get('input[placeholder="Username"]').type("nana");
+    cy.get('input[placeholder="Password"]').type("Lkjklkjkl999(");
     cy.get("button").contains("Log In").should("be.enabled");
     cy.get("button").contains("Log In").click();
     //overview

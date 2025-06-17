@@ -15,6 +15,8 @@ import {
   Tooltip,
   Legend,
 } from "recharts";
+import { Row, Col, Form, Button, InputGroup } from "react-bootstrap";
+import MonthContext from "../context/MonthContext";
 
 const Insights = () => {
   const {
@@ -29,6 +31,8 @@ const Insights = () => {
     useContext(AuthContext);
   const [avg, setAvg] = useState(null);
   const currentDate = new Date().getDate();
+  const { selectedMonth, setSelectedMonth, handleNextMonth, handlePrevMonth } =
+    useContext(MonthContext);
 
   useEffect(() => {
     const fetchAvgAmounts = async () => {
@@ -45,7 +49,7 @@ const Insights = () => {
     fetchSummary();
     fetchAvgAmounts();
     fetchPieData();
-  }, [user]);
+  }, [user, selectedMonth]);
 
   const invest_goal_amount = profile
     ? (parseInt(profile.savings_percent.slice(0, 2), 10) / 100) *
@@ -90,6 +94,21 @@ const Insights = () => {
         <h3 className="text-center mb-4" style={{ color: "black" }}>
           Financial Insights
         </h3>
+
+        {/* month selector */}
+        <InputGroup className="mb-5" style={{ maxWidth: "300px" }}>
+          <Button variant="outline-secondary" onClick={handlePrevMonth}>
+            &lt;
+          </Button>
+          <Form.Control
+            type="month"
+            value={selectedMonth}
+            onChange={(e) => setSelectedMonth(e.target.value)}
+          />
+          <Button variant="outline-secondary" onClick={handleNextMonth}>
+            &gt;
+          </Button>
+        </InputGroup>
 
         <Card
           className="mb-4"
