@@ -73,6 +73,8 @@ const UserHome = () => {
     );
   };
 
+  if (!profile) return <p>Loading...</p>;
+
   return (
     <div
       style={{
@@ -95,56 +97,54 @@ const UserHome = () => {
       )}
 
       {/* total line chart */}
-      <Row className="my-4">
-        <Col md={{ span: 8, offset: 2 }}>
-          <h3 className="text-center">
-            <strong>Total Spent</strong>
-          </h3>
-          <ResponsiveContainer width="100%" height={400}>
-            <LineChart
-              data={total_expenses}
-              margin={{ top: 40, right: 30, left: 80, bottom: 50 }}
+      <div className="my-4" style={{ width: "1200px", margin: "0 auto" }}>
+        <h3 className="text-center">
+          <strong>Total Spent</strong>
+        </h3>
+        <ResponsiveContainer width="100%" height={400}>
+          <LineChart
+            data={total_expenses}
+            margin={{ top: 40, right: 30, left: 80, bottom: 50 }}
+          >
+            <XAxis
+              dataKey="month_name"
+              padding={{ left: 50, right: 50 }}
+              tick={<CustomXAxisTick data={total_expenses} fill="#6CA0DC" />}
+              stroke="grey"
+            />
+            <YAxis hide />
+            <ReferenceLine
+              y={profile?.monthly_spending_goal}
+              stroke="#E8A09A"
+              label={({ viewBox }) => {
+                const { x, y } = viewBox;
+                return (
+                  <text x={x} y={y - 10} textAnchor="middle" fill="#E8A09A">
+                    Goal: {profile?.monthly_spending_goal}
+                    {CURRENCY_SYMBOLS[profile?.currency] || profile?.currency}
+                  </text>
+                );
+              }}
+            />
+            <Line
+              type="linear"
+              dataKey="amount"
+              stroke="#9BBFE0"
+              activeDot={{ r: 8 }}
             >
-              <XAxis
-                dataKey="month_name"
-                padding={{ left: 50, right: 50 }}
-                tick={<CustomXAxisTick data={total_expenses} fill="#6CA0DC" />}
-                stroke="grey"
-              />
-              <YAxis hide />
-              <ReferenceLine
-                y={profile?.monthly_spending_goal}
-                stroke="#E8A09A"
-                label={({ viewBox }) => {
-                  const { x, y } = viewBox;
-                  return (
-                    <text x={x} y={y - 10} textAnchor="middle" fill="#E8A09A">
-                      Goal: {profile?.monthly_spending_goal}
-                      {CURRENCY_SYMBOLS[profile?.currency] || profile?.currency}
-                    </text>
-                  );
-                }}
-              />
-              <Line
-                type="linear"
+              <LabelList
                 dataKey="amount"
-                stroke="#9BBFE0"
-                activeDot={{ r: 8 }}
-              >
-                <LabelList
-                  dataKey="amount"
-                  position="top"
-                  formatter={(value) =>
-                    `${Math.round(value)}${
-                      CURRENCY_SYMBOLS[profile?.currency] || profile?.currency
-                    }`
-                  }
-                />
-              </Line>
-            </LineChart>
-          </ResponsiveContainer>
-        </Col>
-      </Row>
+                position="top"
+                formatter={(value) =>
+                  `${Math.round(value)}${
+                    CURRENCY_SYMBOLS[profile?.currency] || profile?.currency
+                  }`
+                }
+              />
+            </Line>
+          </LineChart>
+        </ResponsiveContainer>
+      </div>
 
       {/* month selector */}
       <Row className="my-4 justify-content-center">
@@ -189,15 +189,17 @@ const UserHome = () => {
                   {data.map((entry, index) => (
                     <Cell key={`cell-${index}`} fill={entry.color} />
                   ))}
-                  <LabelList
-                    dataKey="amount"
-                    position="top"
-                    formatter={(value) =>
-                      `${value}${
-                        CURRENCY_SYMBOLS[profile.currency] || profile.currency
-                      }`
-                    }
-                  />
+                  {profile && (
+                    <LabelList
+                      dataKey="amount"
+                      position="top"
+                      formatter={(value) =>
+                        `${value}${
+                          CURRENCY_SYMBOLS[profile.currency] || profile.currency
+                        }`
+                      }
+                    />
+                  )}
                 </Bar>
               </BarChart>
             </ResponsiveContainer>

@@ -6,16 +6,8 @@ import "../index.css";
 import FetchContext from "../context/FetchContext";
 import { Container, Card } from "react-bootstrap";
 import api from "../utils/api";
-import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  Legend,
-} from "recharts";
-import { Row, Col, Form, Button, InputGroup } from "react-bootstrap";
+import { BarChart, Bar, XAxis, YAxis, Tooltip, Legend } from "recharts";
+import { Form, Button, InputGroup } from "react-bootstrap";
 import MonthContext from "../context/MonthContext";
 
 const Insights = () => {
@@ -68,17 +60,21 @@ const Insights = () => {
         )
       : [];
 
-  const chartData = expenseData.map((item) => {
-    const avgItem = avg.find((a) => a.subcategory === item.subcategory);
-    if (avgItem && avgItem.average > 0 && item.total_amount > avgItem.average)
-      return {
-        name:
-          SUBCATEGORY_MAPPING[item.subcategory?.toLowerCase()?.trim()] ||
-          item.subcategory,
-        averageSpending: avgItem ? parseFloat(avgItem.average.toFixed(2)) : 0,
-        thisMonthSpending: item.total_amount,
-      };
-  });
+  const chartData = expenseData
+    .map((item) => {
+      const avgItem = avg.find((a) => a.subcategory === item.subcategory);
+      if (avgItem && avgItem.average > 0 && item.total_amount > avgItem.average)
+        return {
+          name:
+            SUBCATEGORY_MAPPING[item.subcategory?.toLowerCase()?.trim()] ||
+            item.subcategory,
+          averageSpending: parseFloat(avgItem.average.toFixed(2)),
+          thisMonthSpending: item.total_amount,
+        };
+    })
+    .filter(Boolean);
+
+  console.log(chartData);
 
   return (
     <div
@@ -137,14 +133,18 @@ const Insights = () => {
                   than your goal.
                 </p>
               )}
-            {profile && !exceededSpendingGoal && (
+            {profile && !exceededSpendingGoal && summary.total_expense > 0 && (
               <p style={{ fontWeight: "bold", color: "green" }}>
                 You are on track with your monthly spending goal — great job!
               </p>
             )}
+            {profile && summary.total_expense === 0 && (
+              <p style={{ fontWeight: "bold" }}>No transactions found.</p>
+            )}
           </Card.Body>
         </Card>
 
+        {/* spending comparison */}
         {chartData && chartData.length > 0 && (
           <Card
             className="mb-4"
@@ -153,14 +153,13 @@ const Insights = () => {
             <Card.Body style={{ backgroundColor: "#F7F7F7", color: "black" }}>
               <h5 className="text-center mb-3">Spending Comparison</h5>
               <BarChart
-                width={900}
+                width={1200}
                 height={300}
                 data={chartData}
                 margin={{ top: 20, right: 20, left: 20, bottom: 20 }}
                 barCategoryGap="10%"
                 barGap={10}
               >
-                <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="name" padding={{ left: 0, right: 0 }} />
                 <YAxis />
                 <Tooltip />
@@ -169,11 +168,13 @@ const Insights = () => {
                   dataKey="averageSpending"
                   fill="#9BBFE0"
                   name="Average Spending"
+                  barSize={40}
                 />
                 <Bar
                   dataKey="thisMonthSpending"
                   fill="#E8A09A"
                   name="This Month Spending"
+                  barSize={40}
                 />
               </BarChart>
             </Card.Body>

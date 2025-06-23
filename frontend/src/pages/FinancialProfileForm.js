@@ -73,7 +73,21 @@ const FinancialProfileForm = ({ onSuccess }) => {
       await api.post("financial-profile/", formData);
       onSuccess();
     } catch (error) {
-      processErrorMessage(error);
+      //processErrorMessage(error);
+      if (error.response && error.response.data) {
+        console.log("Errors:", error.response.data);
+        const errorData = error.response?.data;
+        const allMessages = [];
+        for (const key in errorData) {
+          if (Array.isArray(errorData[key])) {
+            allMessages.push(...errorData[key]);
+          }
+        }
+        setErrorMessage(allMessages);
+      } else {
+        console.error("Error submiting profile form.", error);
+        setErrorMessage(["Something went wrong."]);
+      }
     }
   };
 

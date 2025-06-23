@@ -159,6 +159,7 @@ const ChangePassword = () => {
           )}
           <button
             type="submit"
+            disabled={!Object.values(passwordChecks).every(Boolean)}
             className="btn btn-animate mt-3"
             style={{
               backgroundColor: "#A5BB9F",

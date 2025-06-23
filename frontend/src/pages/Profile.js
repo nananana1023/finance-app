@@ -121,15 +121,17 @@ const Profile = () => {
     } catch (error) {
       if (error.response && error.response.data) {
         console.log("Errors:", error.response.data);
-        const errorMsg =
-          error.response.data.non_field_errors &&
-          Array.isArray(error.response.data.non_field_errors)
-            ? error.response.data.non_field_errors.join(", ")
-            : "An error occurred.";
-        setFormError(errorMsg);
+        const errorData = error.response?.data;
+        const allMessages = [];
+        for (const key in errorData) {
+          if (Array.isArray(errorData[key])) {
+            allMessages.push(...errorData[key]);
+          }
+        }
+        setFormError(allMessages);
       } else {
         console.error("Error updating profile.", error);
-        setFormError("An error occurred. Please try again.");
+        setFormError(["Something went wrong."]);
       }
     }
   };

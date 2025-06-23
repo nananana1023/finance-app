@@ -48,6 +48,7 @@ const Transactions = () => {
   const [customExchangeRate, setCustomExchangeRate] = useState("");
   const [showCalculator, setShowCalculator] = useState(false);
   const [activeTab, setActiveTab] = useState(null);
+  const [message, setMessage] = useState("");
   const [newTransaction, setNewTransaction] = useState({
     subcategory: "",
     amount: "",
@@ -168,10 +169,20 @@ const Transactions = () => {
         recurring: false,
       });
     } catch (err) {
-      console.error(
-        "Error adding transaction:",
-        err.response?.data || err.message
-      );
+      const errorData = err.response?.data;
+      if (errorData && typeof errorData === "object") {
+        const allMessages = [];
+
+        for (const key in errorData) {
+          if (Array.isArray(errorData[key])) {
+            allMessages.push(...errorData[key]);
+          }
+        }
+
+        setMessage(allMessages);
+      } else {
+        setMessage(["Something went wrong."]);
+      }
     }
   };
 
@@ -855,6 +866,16 @@ const Transactions = () => {
                   >
                     Add
                   </Button>
+                </div>
+                <div className="d-flex gap-2">
+                  {message && (
+                    <p
+                      className="mt-3"
+                      style={{ fontWeight: "bold", color: "red" }}
+                    >
+                      {message}
+                    </p>
+                  )}
                 </div>
               </Form>
             </Card>

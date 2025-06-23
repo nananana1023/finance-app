@@ -30,7 +30,7 @@ const FileUpload = () => {
       setMessage(response.data.message);
     } catch (error) {
       console.error("Upload error:", error.response.data);
-      setMessage("Error uploading file. ");
+      setMessage("Error uploading file. Please follow the template.");
     }
   };
 
