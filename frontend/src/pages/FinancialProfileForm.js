@@ -91,19 +91,6 @@ const FinancialProfileForm = ({ onSuccess }) => {
     }
   };
 
-  const processErrorMessage = (error) => {
-    const data = error.response?.data;
-    if (data?.non_field_errors && Array.isArray(data.non_field_errors)) {
-      setErrorMessage(data.non_field_errors.join(" "));
-    } else if (data?.detail) {
-      setErrorMessage(data.detail);
-    } else if (data && typeof data === "object") {
-      setErrorMessage(JSON.stringify(data));
-    } else {
-      setErrorMessage(error.message);
-    }
-  };
-
   return (
     <div style={{ minHeight: "100vh", backgroundColor: "#E9E9DF" }}>
       <Container className="py-5" style={{ maxWidth: "50%", margin: "0 auto" }}>
