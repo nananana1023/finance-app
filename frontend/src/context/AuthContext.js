@@ -30,6 +30,7 @@ export const AuthProvider = ({ children }) => {
     NZD: "NZ$",
     SGD: "S$",
     HKD: "HK$",
+    MNT: "₮",
   };
 
   const SUBCATEGORY_MAPPING = {
@@ -114,7 +115,7 @@ export const AuthProvider = ({ children }) => {
 
   useEffect(() => {
     const intervalId = setInterval(async () => {
-      const token = await refreshAccessToken();
+      const token = await refreshAccessToken(); //auto refresh every 5 mins
       if (token) {
         console.log("Token auto-refreshed.");
       } else {

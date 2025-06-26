@@ -286,7 +286,7 @@ const Transactions = () => {
     }
   };
 
-  const convertAmount = async (sourceCurrency, amount) => {
+  const convertAmount = async (newCurrency, amount) => {
     if (showCustomRateField && customExchangeRate) {
       const converted = amount * Number(customExchangeRate);
       setConvertedAmount(Number(converted.toFixed(2)));
@@ -298,11 +298,11 @@ const Transactions = () => {
       );
       const data = await response.json();
       if (data && data.rates) {
-        const rates = data.rates;
-        const rateSource = rates[sourceCurrency];
-        const rateTarget = rates[profile?.currency];
-        if (rateTarget && rateSource) {
-          const converted = amount * (rateTarget / rateSource);
+        const rates = data.rates; //dictionary with rates
+        const newCurRate = rates[newCurrency];
+        const defaultCurRate = rates[profile?.currency];
+        if (defaultCurRate && newCurRate) {
+          const converted = amount * (defaultCurRate / newCurRate);
           setConvertedAmount(Number(converted.toFixed(2)));
         }
       }

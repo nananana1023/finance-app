@@ -52,7 +52,7 @@ class TransactionViewSet(viewsets.ModelViewSet):
         return Transaction.objects.filter(user=self.request.user)
 
     def perform_create(self, serializer):
-        serializer.save(user=self.request.user)
+        serializer.save(user=self.request.user) #create new trans 
         
     @action(detail=False, methods=['get'], url_path='by-month/(?P<year>\d{4})/(?P<month>\d{2})')
     def by_month(self, request, year, month):

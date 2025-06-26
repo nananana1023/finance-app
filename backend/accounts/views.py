@@ -115,11 +115,11 @@ class LoginView(generics.GenericAPIView):
             print("User not found") 
             return Response({"error": "Invalid Credentials"}, status=400)
 
-        if user.check_password(password):
-            refresh = RefreshToken.for_user(user)
+        if user.check_password(password): #matches the hashed pass
+            refresh = RefreshToken.for_user(user) #new jwt refresh token
             return Response({
                 "refresh": str(refresh),
-                "access": str(refresh.access_token),
+                "access": str(refresh.access_token), #access token of the refresh token
             })
 
         print("Password mismatch")  
